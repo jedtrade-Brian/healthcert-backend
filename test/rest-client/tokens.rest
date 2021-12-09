@@ -1,0 +1,14 @@
+@baseurl = http://localhost:3000/api/v1
+@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InpoaWJpbkBqZWR0cmFkZS5jb20iLCJpZCI6IjVlNGY4MWQ0Zjg3Y2M2ZGFhYWYwY2JlZiIsImlhdCI6MTU4MjI2OTEwNSwiZXhwIjoxNTgyMzU1NTA1fQ.cdCisxjjJmupdtiMlRieqcMBrBzGO4U3YrLejJpKnl4
+@api_token = 768b56cb-99f2-4cc0-a227-d504ec33b8b7
+@api_token_2 = 2cefc214-f5de-4658-9c79-c505271ba2fa
+
+
+###
+# create new api token
+POST {{baseurl}}/auth/keys
+Authorization: Bearer {{auth_token}}
+
+###
+# verify api token
+GET {{baseurl}}/auth/keys/{{api_token}}

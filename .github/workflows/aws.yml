@@ -1,0 +1,52 @@
+on:
+  push:
+    branches:
+      - main
+
+name: Deploy to Amazon EKS
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-southeast-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: jcert-api-admin
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+    - name: Get Kube Config
+      run: mkdir -p .kube && echo ${{ secrets.KUBE_CONFIG_DATA }} | base64 --decode > .kube/config
+  
+    - name: Install Kubernetes
+      run: curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+
+    - name: Deployment
+      run: cat k8/deploy.yml | sed "s|jcert-api-admin:latest|jcert-api-admin:${GITHUB_SHA}|" | ./kubectl --kubeconfig=$(pwd)/.kube/config apply -f -
+
+    - name: Verify Deployment
+      run: ./kubectl --kubeconfig=$(pwd)/.kube/config rollout status deployment/jcert-api-admin

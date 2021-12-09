@@ -1,0 +1,42 @@
+@baseurl = http://localhost:3000/api/v1
+@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InpoaWJpbkBqZWR0cmFkZS5jb20iLCJpZCI6IjVlNDEwNzEwYmE3Mjg4NzEyNWZiMTNhZiIsImlhdCI6MTU4MTQ3NDEwMiwiZXhwIjoxNTgxNTYwNTAyfQ.bbmxOT-VwYL5NB-RTWZsz3ZEPL7zJPY4k0azN7RvXoU
+@user_id = 5e4fa1ce8ca7d8001b4cd0db
+@email = zhibin@jedtrade.com
+@password = 123456
+@email_code = emhpYmluMUBqZWR0cmFkZS5jb206RDMxMkYyRg==
+
+###
+# Signup / create user
+POST {{baseurl}}/users
+content-type: application/json
+
+{
+    "email": "zhibin@jedtrade.com",
+    "password": "123456"
+}
+
+###
+# Resend activation email
+PUT {{baseurl}}/users/resend/{{email}}
+
+###
+# Activate user / verify email
+# this link is in the activation email
+GET {{baseurl}}/auth/verify/{{email_code}}
+
+###
+# Get user
+GET {{baseurl}}/users
+Authorization: Bearer {{auth_token}}
+
+###
+# Get user
+GET {{baseurl}}/users/{{user_id}}
+
+###
+# Update user
+PUT {{baseurl}}/users/{{user_id}}
+content-type: application/json
+Authorization: Bearer {{auth_token}}
+
+{}

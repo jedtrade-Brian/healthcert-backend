@@ -1,0 +1,45 @@
+@baseurl = http://localhost:3000/api/v1
+@api_token = 21cd6101-34e5-43f7-83f5-01472993e1ba
+@api_token_2 = 2cefc214-f5de-4658-9c79-c505271ba2fa
+@networkId = 4
+@ganache = 1581479103012
+
+@hash = 0x7c9f6f9db5bc7ac2b313711d0b64f0678001d7be1d3c3420297f71eea7c0b202
+@hash_quo = "0x7c9f6f9db5bc7ac2b313711d0b64f0678001d7be1d3c3420297f71eea7c0b202"
+
+###
+# create JEDSign document
+POST {{baseurl}}/hash
+content-type: application/json
+Authorization: Bearer {{api_token}}
+
+{
+  "hash": {{hash_quo}},
+  "signingType": "2",
+  "networkId": {{ganache}},
+  "filename": "test-jedsign",
+  "signEmails": ["zhibin@jedtrade.com"],
+  "signaturesNeeded": 1
+}
+
+###
+# get JEDSign document by hash
+GET {{baseurl}}/hash/{{ganache}}/{{hash}}
+Authorization: Bearer {{api_token}}
+
+###
+# sign with managed wallet
+PUT {{baseurl}}/sign
+content-type: application/json
+Authorization: Bearer {{api_token}}
+
+{
+  "contractAddress": "0x549C9283687B73526cdd32A6385350D86fb634da",
+  "hash": {{hash_quo}},
+  "signingType": 1,
+  "networkId": {{ganache}}
+}
+
+###
+# get transaction count to determine next nonce
+GET {{baseurl}}/sign/count/{{ganache}}/0x0678c22D8005459e168faEcDe3703c6Aa144F349

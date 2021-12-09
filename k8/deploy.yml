@@ -1,0 +1,201 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jcert-api-admin
+  name: jcert-api-admin
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: jcert-api-admin
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: jcert-api-admin
+  name: jcert-api-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jcert-api-admin
+  template:
+    metadata:
+      labels:
+        app: jcert-api-admin
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: '3000'
+        - name: MONGO_URL
+          valueFrom:
+            secretKeyRef:
+              key: MONGO_URL
+              name: jcert-api-admin
+        - name: JWT_SEC
+          valueFrom:
+            secretKeyRef:
+              key: JWT_SEC
+              name: jcert-api-admin
+        - name: PROVIDER_HTTP
+          valueFrom:
+            secretKeyRef:
+              key: PROVIDER_HTTP
+              name: jcert-api-admin
+        - name: GAS_LIMIT
+          valueFrom:
+            secretKeyRef:
+              key: GAS_LIMIT
+              name: jcert-api-admin
+        - name: GAS_PRICE_PREMIUM_PCT
+          valueFrom:
+            secretKeyRef:
+              key: GAS_PRICE_PREMIUM_PCT
+              name: jcert-api-admin
+        - name: ISSUEDOC_NETWORK
+          valueFrom:
+            secretKeyRef:
+              key: ISSUEDOC_NETWORK
+              name: jcert-api-admin
+        - name: OTP_REQUIRED_SIGNING
+          valueFrom:
+            secretKeyRef:
+              key: OTP_REQUIRED_SIGNING
+              name: jcert-api-admin
+        - name: OTP_REQUIRED_SIGN_IN
+          valueFrom:
+            secretKeyRef:
+              key: OTP_REQUIRED_SIGN_IN
+              name: jcert-api-admin
+        - name: OTP_REQUIRED_NOAISSUE
+          valueFrom:
+            secretKeyRef:
+              key: OTP_REQUIRED_NOAISSUE
+              name: jcert-api-admin
+        - name: OTP_REQUIRED_SIGN_UP
+          valueFrom:
+            secretKeyRef:
+              key: OTP_REQUIRED_SIGN_UP
+              name: jcert-api-admin
+        - name: VALUE
+          valueFrom:
+            secretKeyRef:
+              key: VALUE
+              name: jcert-api-admin
+        - name: WALLET_ADDR
+          valueFrom:
+            secretKeyRef:
+              key: WALLET_ADDR
+              name: jcert-api-admin
+        - name: WALLET_PRIV
+          valueFrom:
+            secretKeyRef:
+              key: WALLET_PRIV
+              name: jcert-api-admin
+        - name: INFURA_ID
+          valueFrom:
+            secretKeyRef:
+              key: INFURA_ID
+              name: jcert-api-admin
+        - name: INFURA_VERSION
+          valueFrom:
+            secretKeyRef:
+              key: INFURA_VERSION
+              name: jcert-api-admin
+        - name: GAS_LIMIT_DOCSTORE
+          valueFrom:
+            secretKeyRef:
+              key: GAS_LIMIT_DOCSTORE
+              name: jcert-api-admin
+        - name: DOCSTORE_FACTORY
+          valueFrom:
+            secretKeyRef:
+              key: DOCSTORE_FACTORY
+              name: jcert-api-admin
+        - name: DocStoreABI
+          valueFrom:
+            secretKeyRef:
+              key: DocStoreABI
+              name: jcert-api-admin
+        - name: DocStoreFactoryABI
+          valueFrom:
+            secretKeyRef:
+              key: DocStoreFactoryABI
+              name: jcert-api-admin
+        - name: DocStoreMappingABI
+          valueFrom:
+            secretKeyRef:
+              key: DocStoreMappingABI
+              name: jcert-api-admin
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: AWS_ACCESS_KEY_ID
+              name: jcert-api-admin
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: AWS_SECRET_ACCESS_KEY
+              name: jcert-api-admin
+        - name: BASEURL
+          valueFrom:
+            secretKeyRef:
+              key: BASEURL
+              name: jcert-api-admin
+        image: 722279944241.dkr.ecr.ap-southeast-1.amazonaws.com/jcert-api-admin:latest
+        imagePullPolicy: Always
+        name: jcert-api-admin
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: jcert-api-admin-gw
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - jcerts-admin-api.sandbox158.run
+  - port:
+      number: 443
+      name: https
+      protocol: HTTP
+    hosts:
+    - jcerts-admin-api.sandbox158.run
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: jcert-api-admin-vs
+spec:
+  hosts:
+    - jcerts-admin-api.sandbox158.run
+  gateways:
+  - jcert-api-admin-gw
+  http:
+  - route:
+    - destination:
+        host: jcert-api-admin
+  tls:
+    - match:
+      - port: 443
+        sniHosts:
+        - jcerts-admin-api.sandbox158.run
+      route:
+      - destination:
+          host: jcert-api-admin
+          port:
+            number: 80

@@ -1,0 +1,11 @@
+@baseurl = http://localhost:3000/api/v1
+
+###
+# login
+POST {{baseurl}}/auth/login
+content-type: application/json
+
+{
+    "email": "zhibin@jedtrade.com",
+    "password": "123456"
+}
