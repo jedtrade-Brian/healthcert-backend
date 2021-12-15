@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class DictDTO {
+export class HCPCRDTO {
   @ApiProperty({
     type: 'array',
     items: {
@@ -10,20 +10,20 @@ export class DictDTO {
           properties: {
             patientId: {
               type: 'string',
-            },
-            name: {
+            },      
+            patientEmail: {
               type: 'string',
             },
-            nric: {
+            patientFirstName: {
               type: 'string',
             },
-            email: {
+            patientLastName: {
               type: 'string',
             },
-            lastName: {
+            gender: {
               type: 'string',
             },
-            passportNo: {
+            patientPPN: {
               type: 'string',
             },
             nationality: {
@@ -32,27 +32,54 @@ export class DictDTO {
             dob: {
               type: 'number',
             },
-            completionDate: {
+            patientTKC: {
+              type: 'number',
+            },
+            patientTKN: {
+              type: 'string',
+            },
+            collectedDate: {
+              type: 'number',
+            },
+            effectiveDate: {
+              type: 'number',
+            },
+            resultCode: {
+              type: 'number',
+            },
+            result: {
+              type: 'string',
+            },
+            performer: {
+              type: 'string',
+            },
+            identifier: {
+              type: 'string',
+            },
+            clinicName: {
+              type: 'string',
+            },
+            officeAdd: {
+              type: 'string',
+            },
+            OfficeNo: {
+              type: 'number',
+            },
+            webAdd: {
+              type: 'string',
+            },
+            labName: {
+              type: 'string',
+            },
+            labAdd: {
+              type: 'string',
+            },
+            labNo: {
               type: 'number',
             },
           },
         },
-        transcript: {
-          type: 'array',
-          items: {
-            properties: {
-              moduleName: {
-                type: 'string',
-                description: 'Module Name',
-              },
-              grade: {
-                type: 'string',
-                description: 'Module Grade',
-              },
-            },
-          },
-        },
-        id: {
+        transcriptId: {
           type: 'string',
         },
       },

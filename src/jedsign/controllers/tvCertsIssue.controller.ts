@@ -35,6 +35,9 @@ import {
 } from '@nestjs/swagger';
 import { ADCSDto } from '../dto/adcs.dto';
 import { DictDTO } from '../dto/dict.dto';
+
+import { HCPCRDTO } from '../dto/hcpcr.dto';
+
 import { ADSMDto } from '../dto/adsm.dto';
 import { PDDMCSDto } from '../dto/pddmcs.dto';
 import { AuthService } from 'src/auth/auth.service';
@@ -319,7 +322,83 @@ export class EnterpriseSignController {
 
 
 
+
+
+
+
+
   
+  @UseGuards(AuthGuard('api'))
+  @Post('/hcpcr')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create hcpcr Document',
+    description: 'Bearer apiToken required.',
+  })
+  @ApiCreatedResponse({
+    description: 'Document has been issued',
+    schema: {
+      properties: {
+        certArr: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              docName: {
+                type: 'string',
+                description: 'Name of Document',
+              },
+              patientEmail: {
+                type: 'string',
+                description: 'Email of recipient',
+              },
+              patientName: {
+                type: 'string',
+                description: 'Name of recipient',
+              },
+              docHash: {
+                type: 'string',
+                description: 'Hash of document',
+              },
+              documentId: {
+                type: 'string',
+                description: 'Id of Document',
+              },
+              effectiveDate: {
+                type: 'number',
+                description: 'Completion Date of course',
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request: probable cause: Invalid Input.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized. Probable cause: invalid bearer token or not presented.',
+  })
+  async createHCPCR(@Request() req, @Body() HCPCRDTO: HCPCRDTO) {
+    try {
+      return await this.jedsignService.createhcpcrDoc(req.user.token, HCPCRDTO);
+    } catch (e) {
+      if (e instanceof HttpException) throw e;
+      throw new BadRequestException(e.message);
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

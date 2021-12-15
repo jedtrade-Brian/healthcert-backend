@@ -5,6 +5,7 @@ import { ADCSDto } from './dto/adcs.dto';
 import { Certificate2DTO } from './dto/certificate2.dto';
 import { CertificateDTO } from './dto/certificate.dto';
 import { DictDTO } from './dto/dict.dto';
+import { HCPCRDTO } from './dto/hcpcr.dto';
 import { ADSMDto } from './dto/adsm.dto';
 import { PDDMCSDto } from './dto/pddmcs.dto';
 import { UpdateCert2 } from './dto/updateCert2.dto';
@@ -1987,6 +1988,319 @@ export class JedsignService {
     //console.log('CreateDICT', duration);
     return { certArr };
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  async createhcpcrDoc(apiToken: string, HCPCRDTO: HCPCRDTO) {
+    const certArr = [];
+    const rawJSONArr = [];
+    const startTime = new Date();
+    const web3 = await this.web3Service.getWeb3();
+    const getUserInfo = await this.tokensService.findOneByToken(apiToken);
+    const getCompanyName = getUserInfo.companyName;
+    
+    //const getUserEmail = getUserInfo.email;
+    const getUserAddr = getUserInfo.wallet.address;
+    const getDomain = getUserInfo.domain;
+    const factoryContract = new web3.eth.Contract(
+      JSON.parse(process.env.DocStoreFactoryABI),
+      process.env.DOCSTORE_FACTORY,
+    );
+    const docStore = await factoryContract.methods.assets(getUserAddr).call();
+    const issuers = {
+     
+      //name: 'DICT Certificate',
+      issuers: [
+        {
+          name: `${getCompanyName}`,
+          individualName: `${getUserInfo.name}`,
+          //address1: `${getUserInfo.address1}`,
+          //address2: `${getUserInfo.address2}`,
+          //zipcode: `${getUserInfo.zipcode}`,
+          //country: `${getUserInfo.country}`,
+          //phoneNo: `${getUserInfo.mobileNo}`,
+          documentStore: `${docStore}`,
+          identityProof: {
+            type: 'DNS-TXT',
+            location: `${getDomain}`,
+          },
+          //email: `${getUserEmail}`,
+          //walletAddress: `${getUserAddr}`,
+        },
+      ],
+      $template: {
+        name: 'JEDTRADE_DEMO',
+        type: 'EMBEDDED_RENDERER',
+        url: 'https://healthcert.renderer.moh.gov.sg/',
+      }
+    };
+
+    //console.log(getDomain);
+    //console.log(JSON.stringify(issuers,null,2));
+
+    const issuerPrivateKey = await getUserInfo.getPrivateKey();
+
+    const valuesAlreadySeen = [];
+    await this.web3Service.updateGasPrice();
+    await Promise.all(
+      HCPCRDTO.documents.map(async document => {
+        const documentId = document['id'];
+        //console.log("hello");
+        //console.log(documentId);
+        if (valuesAlreadySeen.indexOf(documentId) !== -1) {
+          throw new Error(`Duplicate ID - ${documentId}`);
+        }
+        valuesAlreadySeen.push(documentId);
+        const findDocId = await this.documentModel.findOne({ documentId });
+        if (findDocId != null) {
+          throw new Error(`Document ID - ${documentId} already in use`);
+        } else {
+          const hcpcrDoc = { ...document, ...issuers };
+          const documentId = document['id'];
+          const hcpcrJSON = `${documentId}-HCPCR.json`;
+          console.log(hcpcrJSON);
+          const dictString = JSON.stringify(hcpcrDoc);
+          const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
+          console.log(folderPath);
+          const finalFile = `${folderPath}/${hcpcrJSON}`;
+          console.log(finalFile);
+          fs.writeFileSync(finalFile, dictString);
+          const bufferReadFile = fs.readFileSync(finalFile);
+          const readFile = bufferReadFile.toString();
+          rawJSONArr.push(JSON.parse(readFile));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          console.log(JSON.stringify(hcpcrDoc,null,2));
+        }
+      }),
+    );
+
+    const wrappedDocuments = wrapDocuments(rawJSONArr);
+
+    
+    
+    
+
+    let merkleRoot;
+    const targetArr = [];
+    await Promise.all(
+      wrappedDocuments.map(async wrappedDoc => {
+        const wrapDocInfo = JSON.stringify(wrappedDoc);
+        const rawDocInfo = getData(wrappedDoc);
+        const docInfo = JSON.stringify(rawDocInfo);
+        const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
+        const hcpcrJSON = `${rawDocInfo.id}-HCPCR.json`;
+        const finalFile = `${folderPath}/${hcpcrJSON}`;
+        fs.writeFileSync(finalFile, wrapDocInfo);
+        const file = Buffer.from(fs.readFileSync(finalFile).toString('base64'));
+        const docRoot = wrappedDoc['signature'].targetHash;
+        const docName = `${rawDocInfo.id}-HCPCR`;
+        const docStore = rawDocInfo.issuers[0].documentStore;
+        const name = `${rawDocInfo.recipient.patientFirstName} ${rawDocInfo.recipient.patientLastName}`;
+
+       
+
+        //Save Student Info to DB
+        const patientId = await this.studentModel.findOne({
+          patientId: rawDocInfo.recipient.patientId,
+        });
+        if (patientId == null) {
+          const patient = new this.studentModel({
+            patientId: rawDocInfo.recipient.patientId,
+            patientNRIC: rawDocInfo.recipient.patientNRIC,
+            patientEmail: rawDocInfo.recipient.patientEmail,
+            patientName: `${name}`,
+            gender: rawDocInfo.recipient.gender,
+            patientPPN: rawDocInfo.recipient.patientPPN,
+            nationally: rawDocInfo.recipient.nationally,
+            dob: rawDocInfo.recipient.dob,
+            effectiveDate: rawDocInfo.recipient.effectiveDate,
+          });
+           
+          await patient.save();
+        }
+
+        
+
+        const patientInfo = await this.studentModel.findOne({
+          patientId: rawDocInfo.recipient.patientId,
+        });
+
+        console.log('hello');
+
+        //console.log(patientInfo);
+
+        //Save Doc Info to DB
+        const doc = new this.documentModel({
+          docHash: `0x${docRoot}`,
+          issuerDocStore: docStore,
+          docInfo,
+          wrapDocInfo,
+          docType: 'HCPCR',
+          documentId: rawDocInfo.id,
+          patientTKC: rawDocInfo.recipient.patientTKC,
+          patientTKN: rawDocInfo.recipient.patientTKN,
+          collectedDate: rawDocInfo.recipient.collectedDate,
+          effectiveDate: rawDocInfo.recipient.effectiveDate,
+          patientId: patientInfo._id,
+          resultCode: rawDocInfo.recipient.resultCode,
+          result: rawDocInfo.recipient.result,
+          performer: rawDocInfo.recipient.performer,
+          identifier: rawDocInfo.recipient.identifier,
+          clinicName: rawDocInfo.recipient.clinicName,
+          officeAdd: rawDocInfo.recipient.officeAdd,
+          officeNo: rawDocInfo.recipient.officeNo,
+          webAdd: rawDocInfo.recipient.webAdd,
+          labName: rawDocInfo.recipient.labName,
+          labAdd: rawDocInfo.recipient.labAdd,
+          labNo: rawDocInfo.recipient.labNo,
+          issuedDate: 0,
+          revokedDate: 0,
+          isBatchRevoke: false,
+        });
+        await doc.save();
+
+
+        console.log('yes');
+
+        const link = `https://jviewer.sandbox158.run/`;
+        this.mailerService.sendDICT(
+          rawDocInfo.recipient.email,
+          link,
+          name,
+          issuers.issuers[0].name,
+          rawDocInfo.id,
+          docName,
+          file,
+        );
+
+        this.usersService.etherCheck(getUserAddr);
+
+        const docs = {
+          docName,
+          email: rawDocInfo.recipient.email,
+          name,
+          docHash: `0x${docRoot}`,
+          documentId: rawDocInfo.id,
+          completionDate: rawDocInfo.recipient.completionDate,
+        };
+        merkleRoot = `0x${wrappedDoc['signature'].merkleRoot}`;
+        certArr.push(docs);
+        targetArr.push(`0x${docRoot}`);
+      }),
+    );
+
+    //Save batch info to DB
+    const batch = new this.batchesModel({
+      issuerDocStore: docStore,
+      documentBatch: targetArr,
+      merkleRoot,
+    });
+    await batch.save();
+
+    //Issue Document
+    const contract = new web3.eth.Contract(JSON.parse(process.env.DocStoreABI), docStore);
+    const data = await contract.methods.issue(merkleRoot).encodeABI();
+    const nonce = await web3.eth.getTransactionCount(getUserAddr, 'pending');
+
+    const rawTx = {
+      nonce: web3.utils.toHex(nonce),
+      gasPrice: web3.utils.toHex(
+        (this.web3Service.gasPrice.average * (100 + parseInt(process.env.GAS_PRICE_PREMIUM_PCT))) /
+          100,
+      ),
+      to: docStore,
+      gasLimit: web3.utils.toHex(process.env.GAS_LIMIT),
+      value: web3.utils.toHex(web3.utils.toWei('0')),
+      data: data,
+    };
+
+    const tx = await new EthereumTx(rawTx, { chain: `${process.env.ISSUEDOC_NETWORK}` });
+    tx.sign(Buffer.from(`${issuerPrivateKey}`, 'hex'));
+    const serializedTx = tx.serialize();
+    web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')).on('receipt', console.log);
+
+    const endTime = new Date();
+    const duration = (endTime.getTime() - startTime.getTime()) / 1000;
+    console.log('CreateDICT', duration);
+    return { certArr };
+  }
+
+
+
+
+
+
+
+
+
 
 
 
