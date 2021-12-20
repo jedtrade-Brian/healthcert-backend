@@ -367,13 +367,15 @@ export class EnterpriseSignController {
               effectiveDate: {
                 type: 'number',
                 description: 'Completion Date of course',
-              },
+              },  
+             
             },
           },
         },
       },
     },
   })
+  
   @ApiBadRequestResponse({
     description: 'Bad Request: probable cause: Invalid Input.',
   })

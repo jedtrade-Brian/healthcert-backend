@@ -1467,6 +1467,20 @@ export class JedsignService {
       });
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   async createADCSDoc(apiToken: string, ADCSDto: ADCSDto) {
     logger.info('Jedsign.service: createADCSDoc: Before the call');
     const certArr = [];
@@ -1720,77 +1734,6 @@ export class JedsignService {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   async createDICTDoc(apiToken: string, DictDTO: DictDTO) {
     const certArr = [];
     const rawJSONArr = [];
@@ -2005,148 +1948,102 @@ export class JedsignService {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   
   async createhcpcrDoc(apiToken: string, HCPCRDTO: HCPCRDTO) {
+    
     const certArr = [];
     const rawJSONArr = [];
     const startTime = new Date();
     const web3 = await this.web3Service.getWeb3();
     const getUserInfo = await this.tokensService.findOneByToken(apiToken);
+
     const getCompanyName = getUserInfo.companyName;
-    
-    //const getUserEmail = getUserInfo.email;
     const getUserAddr = getUserInfo.wallet.address;
     const getDomain = getUserInfo.domain;
     const factoryContract = new web3.eth.Contract(
       JSON.parse(process.env.DocStoreFactoryABI),
       process.env.DOCSTORE_FACTORY,
     );
+
     const docStore = await factoryContract.methods.assets(getUserAddr).call();
+
     const issuers = {
      
-      //name: 'DICT Certificate',
+      //name: 'HCPCR Certificate',
       issuers: [
         {
           name: `${getCompanyName}`,
-          individualName: `${getUserInfo.name}`,
-          //address1: `${getUserInfo.address1}`,
-          //address2: `${getUserInfo.address2}`,
-          //zipcode: `${getUserInfo.zipcode}`,
-          //country: `${getUserInfo.country}`,
-          //phoneNo: `${getUserInfo.mobileNo}`,
           documentStore: `${docStore}`,
           identityProof: {
             type: 'DNS-TXT',
             location: `${getDomain}`,
           },
-          //email: `${getUserEmail}`,
-          //walletAddress: `${getUserAddr}`,
         },
       ],
       $template: {
-        name: 'JEDTRADE_DEMO',
+        name: 'HEALTH_CERT',
         type: 'EMBEDDED_RENDERER',
         url: 'https://healthcert.renderer.moh.gov.sg/',
-      }
+      }, 
     };
-
-    //console.log(getDomain);
-    //console.log(JSON.stringify(issuers,null,2));
 
     const issuerPrivateKey = await getUserInfo.getPrivateKey();
 
     const valuesAlreadySeen = [];
     await this.web3Service.updateGasPrice();
-    await Promise.all(
-      HCPCRDTO.documents.map(async document => {
-        const documentId = document['id'];
-        //console.log("hello");
-        //console.log(documentId);
+
+     await Promise.all(
+       HCPCRDTO.documents.map(async document => {
+        const documentId = document['Id'];
+        const reference = document['reference'];
+        const notarisedOn = document['notarisedOn'];
+        const passportNumber = document['passportNumber'];
+
+        const qrcosde = {
+        "notarisationMetadata": {
+            "reference": reference,
+            "notarisedOn": notarisedOn,
+            "passportNumber": passportNumber,
+            "url": "https://rinkeby.opencerts.io/?q=%7B%22type%22%3A%22DOCUMENT%22%2C%22payload%22%3A%7B%22uri%22%3A%22https%3A%2F%2Fidev.jupyton.com%3A8443%2Fdocument%2F6cfbbcbf-85a1-4644-b61a-952c12376502.json%22%2C%22key%22%3A%222b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c%22%7D%7D"
+          },
+          "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAADICAMAAAApx+PaAAAAM1BMVEUAAADMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzeCmiAAAAAEHRSTlMAQL+A7xAgn2DP3zBwr1CPEl+I/QAABwdJREFUeNrsnd122yoQRvkHISHN+z/tyUk9oTECQ1bTBc23byNs0B5GIDARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAk+Ik+Idx4g5N4B9GQ/rPA9J/IPfSgwL/MEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwP5ZPoP5r7FJKAf7cufBihPNSkX5hlA9u+DsP7dX/JK1P2VPiSIoebErLwVh5Zx+8C1Y22YtP0Fpf6hdea+mq1Wlixfej6RcDxj09swXbbeBQpijug20aj/SE8bvo5hEuavAuSKpQfJxTG91gUrCV6jSQE0oPke4wuke705EqpLNWxtMtSk4jvXGld+tLlxvVMNnakD7mEndYTVWSnV860WUXl34RMy7BempyGzN7pAbmXEA6bfvK0u32uTFKKVM0r0Yw1MTcFvp8iVLPD0+9gHQy+7rSf3eejp2HuFcsmldiEz0FzKXfSRw3qe08Xqd9dP6QKONnku4lG3NSb/RBtKtKt1ttdBJiYb2VI7brc7tc8IYotJzHUB0c+O+T3rTQuLKsZRqpzkTS7dZI4vo+qJndEGO8Ezecyjac6/ITN2KOWaULIT/aLdeUnqpdi7VW2+Kyc29FL3s7e3hi5LTSheWWpyWlH4XzmvWjniOiFN3YWDivWI92Wuk5ct2C0p3Jzl9YN66WI5IV/VyF86r1a17pH5UMC0pX/DwXVU524Ks5YgDZmL4zGz1w80p33Pj1pMvci+tc2cFIjmhH2dWVfuaVLuLjy9eTzgqOrqewv0vum/1KR4+2a6Dh5pXO7V9O+s4KRJPADuxNjtjFCCk/CltEzgfzSterSvdZQZeDoyyqxQguR1lXmBlI/9PSebZpbOe8bivt2bFK9YaK4eHe7NLNatLP3qGYLfL71RoMvB6Xu96J3TWt9LToQM5zm8YfxbHIESPZXXW/tovTSo+PqFxNeswZqjO/X09OvBgi9OcHw7llUukcv+di0rneqf99uXoKglMMwall7x/my0mlP5piVnv3fuZ+193xnpTYLz3SjejPLXpO6TtXbzXpfIUceJHmPsXAJsbI+aL7fvsppVsOX7uadJ9FvuT63PxsZAQ3UMxygLyWvsk6/luku40fb8ttolDFFb1ZQQ6/mRkv1iW9i1J6C/1aejAcvQPVmUt6FB2cn26JzDO4TsaLcWeaTbo7In04X08696XxTnrkmzGCHimmJpLuNaPi71f+KOkte5IK9OrS74ingPSfJd1oISD9Z0m/hPhB0o+/Ld3MMGUrSU68s9yUzXSO3suhW+Bh+Jj0oyz2snZqgpczd5iwpvRvmKfXpY/P0yeSfsgHOhliwtLS7cBSiR1aZFP30q+Bt3fXbK9hQ2Tr+4rSc+8dflXCO2l6pY+PIs5pF1xs4kmbXVB6z0JWRRdH+6B0w8VeoydeWlV84xaULnvX08vEzNn+HJOu+tfT1cSbKPLewvWkc/c1/Yts4SlJ+DHpunsF3069XSrw7VhQel4gHN3QuHO8jEk/O8cC+Uo/pXR+vG0LSn/ZXxlXyIoc60PSheldwvdzb4HW3I71pO/0wHYqOIp8v41JT52TNjf5jx24fmE96WLrG7/bsoM6ehCGpJ8s0/ZV3k8qnTOdX1B66HOgb4b5KRftl54fC7ovyvZZpXt6Jy4o3ZqedOvMTdslPUhD0rlWxvVMFtS0P1UOnPvWk84Xdb0DIXW/kHiMSLem7rMMKDmt9J0HmgtK/3Bg7GhgOGLCgPT8afp1pdTEx4886ngtKF2c9OpsgVDbOKCJOQaki+1VrFi+wriJpfNa/orShcrW286jLYsyyfZLl8SEtnM65j1SLH+wXVG6jc0DYI986FujKJnQLV0c1Mrw7sO5n/fwwDfkoj9gfD4ozhyFAUVMqBRlYrCd0oUnRrkiyEzOPFNLFzTzT5VlBXd3Om8ozkBtOOdDPZkU9k9/PCpLkHarnZUfIhXOv0/6ISv0SOcvj/1b9tzfkN5G3x7ebdIh34WfF6tpDrrYK6PUpd/4fJS3bpXartOJN+SRDBXOv0l6m6EzZ1z35lw9k3RO01WMFBU4H4+21lMbb8Xs0vlvYVHp3PUqKCcaODUsnbNLSR5cTC+dZ+ppVelCnKa117eNTNQkSVFiU2tP+QrSOVvZZaULqwvtPCh/jdMb3RN99QOkojv8LsQS0k/O7+tKf+NMT96NP0UvLvinRm9Jn24wVrbDCbGIdF4xVBNJ/xJSe6Ueo/Bj/9I/7Dy0PvrnJy5opSIRRZX0aQUAAPzX3h3UAACAQAx7YAD/anFBCNdamIABAAAAAAAAAAAAAAAAAAAAAAAAAADAmmoeK9HziB5I9EBXnx8AAAAAAAAAALBmAIZKmzWInxyOAAAAAElFTkSuQmCC",
+          "attachments": [
+            {
+              "filename": "healthcert.txt",
+              "type": "text/open-attestation",
+              "data": 
+              "eyJ2ZXJzaW9uIjoiaHR0cHM6Ly9zY2hlbWEub3BlbmF0dGVzdGF0aW9uLmNvbS8yLjAvc2NoZW1hLmpzb24iLCJkYXRhIjp7ImlkIjoiOWJhZjQ4MWQtNjJjNy00NjEzLWE2MGYtYmM4ZTljMjk3NjQwOnN0cmluZzpURVNUMDAxIiwibmFtZSI6IjYxYWM0ZTY3LWQ5ZDgtNDMyMi1iYWI4LWE5MTI4ZjBjY2ZhZDpzdHJpbmc6SGVhbHRoQ2VydCIsInZhbGlkRnJvbSI6IjM1NTc3NTg0LTk3NDAtNDRjOC1iMDdiLThhMzU0NTkyMDNhMDpzdHJpbmc6MjAyMS0wNS0xOFQwNjo0MzoxMi4xNTJaIiwiZmhpclZlcnNpb24iOiI5ODQ2M2NjNC1mNGViLTQxN2QtOTY1ZC05MzUxMjBkOTFmMGU6c3RyaW5nOjQuMC4xIiwiZmhpckJ1bmRsZSI6eyJyZXNvdXJjZVR5cGUiOiI3ZGViN2QwOS1kNmIyLTRlMDMtOGY1Yy04MTE4NGViNzYyNWE6c3RyaW5nOkJ1bmRsZSIsInR5cGUiOiI0Y2ZmOTAyMy0xYjdlLTRkODEtYjJhNS03M2UzOGM4Zjg5N2U6c3RyaW5nOmNvbGxlY3Rpb24iLCJlbnRyeSI6W3sicmVzb3VyY2VUeXBlIjoiZDFlOGUwMWItN2Q5MS00ZDI5LWIyMzgtYTkzNWYwMjIyZmY3OnN0cmluZzpQYXRpZW50IiwiZXh0ZW5zaW9uIjpbeyJ1cmwiOiI1YmUwNGI1Zi0wMzkwLTQxZmItOGFmOC01NmY5MGM0Mzg3NmM6c3RyaW5nOmh0dHA6Ly9obDcub3JnL2ZoaXIvU3RydWN0dXJlRGVmaW5pdGlvbi9wYXRpZW50LW5hdGlvbmFsaXR5IiwiY29kZSI6eyJ0ZXh0IjoiYmYzNDA3YmMtNjU1Mi00YzhiLWI5YzItYzc2YTRmOGU1OTRlOnN0cmluZzpTRyJ9fV0sImlkZW50aWZpZXIiOlt7InR5cGUiOiI4OTZmZjc1Ni03ODY0LTQyYjQtYTQ1Ny1mMjNlM2U5MTZkNmY6c3RyaW5nOlBQTiIsInZhbHVlIjoiMjY0OGNhOGItYWE2Yy00M2I4LTlhMWItYjU1NDg0MGEyN2Q0OnN0cmluZzpFNzgzMTE3N0cifSx7InR5cGUiOnsidGV4dCI6ImUxYzMxY2RiLTdmMTEtNGRlNy1hZTZjLWE2MTk2NmIyYWVhZDpzdHJpbmc6TlJJQyJ9LCJ2YWx1ZSI6IjJhNDVjZDFhLTQzOTUtNGVjMS1hM2EzLWUzNGY0NjdiMzBhYzpzdHJpbmc6UzkwOTg5ODlaIn1dLCJuYW1lIjpbeyJ0ZXh0IjoiZTk0OTIxNzctZDg3ZC00NzU1LTk5YWQtNTk3ZjRjOTFjZGI3OnN0cmluZzpUYW4gQ2hlbiBDaGVuIn1dLCJnZW5kZXIiOiI3YmMxNTY1My1hMjJmLTQyMmEtODk3ZS01ZjA2NzI4MjdhYjI6c3RyaW5nOmZlbWFsZSIsImJpcnRoRGF0ZSI6IjA4NGZhNGE3LTAzZTQtNDJmYS1iMDQwLTYyNjk4ZTVjNjIwODpzdHJpbmc6MTk5MC0wMS0xNSJ9LHsicmVzb3VyY2VUeXBlIjoiYzZkNmVjNmEtZjIzNi00OWY3LWJmYjktN2Y4NTVhN2FkNDI1OnN0cmluZzpTcGVjaW1lbiIsInR5cGUiOnsiY29kaW5nIjpbeyJzeXN0ZW0iOiIwZjFiMWE3OS00MzJhLTQ1OTEtOWM1YS1iNWZlZmNkMjVkNTA6c3RyaW5nOmh0dHA6Ly9zbm9tZWQuaW5mby9zY3QiLCJjb2RlIjoiYmExMzJjZDktZTkyNy00OTM4LWE3MDQtYmNlMWQ0NzdjZDgzOnN0cmluZzoyNTg1MDAwMDEiLCJkaXNwbGF5IjoiZmRhMmU4MTYtNzc0Mi00ZDQzLWI2OTctNTFiNzRkOGZmNDhlOnN0cmluZzpOYXNvcGhhcnluZ2VhbCBzd2FiIn1dfSwiY29sbGVjdGlvbiI6eyJjb2xsZWN0ZWREYXRlVGltZSI6IjI0MzRjMDIyLTA0NDctNGFmMS05YWMzLWU0ZjMzOWU3NzZjODpzdHJpbmc6MjAyMC0wOS0yN1QwNjoxNTowMFoifX0seyJyZXNvdXJjZVR5cGUiOiI3ODc1NjlmNy1iMGJmLTRmYWMtYWY3My1hNjhlYmExMjk4NWU6c3RyaW5nOk9ic2VydmF0aW9uIiwiaWRlbnRpZmllciI6W3sidmFsdWUiOiI1NjIzYzk3My1hYmE1LTQyM2UtYWUyZi1jOTRlZmRhODkyNGQ6c3RyaW5nOjEyMzQ1Njc4OSIsInR5cGUiOiI1Mjg0ZTJhMS0wMTYzLTQwNTktOWNlYS1mNTk3NzlkZmJkMGI6c3RyaW5nOkFDU04ifV0sImNvZGUiOnsiY29kaW5nIjpbeyJzeXN0ZW0iOiJlNmIxZjNjMS1lN2U1LTQ2ZTktYTM3Mi1mYjliNmFjYjc1MGQ6c3RyaW5nOmh0dHA6Ly9sb2luYy5vcmciLCJjb2RlIjoiZjJiYWVlODUtMThhYi00YzMyLWJlZTItMTRlNzUzZjNiYmY2OnN0cmluZzo5NDUzMS0xIiwiZGlzcGxheSI6ImMxMzE4ZjkyLTc4YzUtNDM3OC1iZTg4LTE4NzQ2YjFhZDM0ODpzdHJpbmc6UmV2ZXJzZSB0cmFuc2NyaXB0aW9uIHBvbHltZXJhc2UgY2hhaW4gcmVhY3Rpb24gKHJSVC1QQ1IpIHRlc3QifV19LCJ2YWx1ZUNvZGVhYmxlQ29uY2VwdCI6eyJjb2RpbmciOlt7InN5c3RlbSI6IjkyMTA3NGE1LTQ2OGYtNGVkMC04MGUyLTMyNmM5ODA5OTJmYzpzdHJpbmc6aHR0cDovL3Nub21lZC5pbmZvL3NjdCIsImNvZGUiOiI4NmFjNDk2ZS00MmI0LTRjMmMtOWZjMy0xNGNiZjUzYTQyYjI6c3RyaW5nOjI2MDM4NTAwOSIsImRpc3BsYXkiOiI4YjA2OWYzOC1iZTQyLTRkYmYtYWVlOS0yNTRjOWVjNGM0ODM6c3RyaW5nOk5lZ2F0aXZlIn1dfSwiZWZmZWN0aXZlRGF0ZVRpbWUiOiI3MWM1ZjM5Yy03YmE2LTRjYzUtYjkxOS03Zjk5ZDgyOTA1ZjQ6c3RyaW5nOjIwMjAtMDktMjhUMDY6MTU6MDBaIiwic3RhdHVzIjoiNGUyMjZkNDMtZTNmMi00YWExLTk4NzItMWEyYmMzZDdlZGE4OnN0cmluZzpmaW5hbCIsInBlcmZvcm1lciI6eyJuYW1lIjpbeyJ0ZXh0IjoiMzNjNmYzZTQtOGY0ZS00NmFkLWJlNzMtY2FmYjNmZTI3YTI5OnN0cmluZzpEciBNaWNoYWVsIExpbSJ9XX0sInF1YWxpZmljYXRpb24iOlt7ImlkZW50aWZpZXIiOiI3Yzg0NjUzZC00YjYzLTRhMjUtODJhZS1lOGUyNjE3NjQ2ZTk6c3RyaW5nOk1DUiAxMjMyMTQiLCJpc3N1ZXIiOiIxNzk4YmVkNC1kY2FjLTQwNmYtOTQyOC05NTgyMDVjYzk1MzU6c3RyaW5nOk1PSCJ9XX0seyJyZXNvdXJjZVR5cGUiOiJkN2E5MDMzNy0xYTdhLTRkNWQtYTAzZC03Nzk0ZTE1ZmQ3ODk6c3RyaW5nOk9yZ2FuaXphdGlvbiIsIm5hbWUiOiI1YTFhOTExNC1kZWE3LTQ2MGItYWNiZS04NWFmNjEzNzNmY2E6c3RyaW5nOk1hY1JpdGNoaWUgTWVkaWNhbCBDbGluaWMiLCJ0eXBlIjoiYWU0YmU1M2QtYzU0Yi00NzZhLWI1NTgtOWM5ZjE3NDk2N2ZmOnN0cmluZzpMaWNlbnNlZCBIZWFsdGhjYXJlIFByb3ZpZGVyIiwiZW5kcG9pbnQiOnsiYWRkcmVzcyI6IjU4NTFjODY0LTA1ZTItNDYxZi05MTBhLTc0Y2FhOWNiNDQ5YjpzdHJpbmc6aHR0cHM6Ly93d3cubWFjcml0Y2hpZWNsaW5pYy5jb20uc2cifSwiY29udGFjdCI6eyJ0ZWxlY29tIjpbeyJzeXN0ZW0iOiJmYzliZWQwYS1hYTNmLTQyMjUtYTdmYS00MzU5ZTJiNDAxMjQ6c3RyaW5nOnBob25lIiwidmFsdWUiOiJlOTZjZWEwNy0yZjE5LTQyMDMtOTg4ZC0zNzUwMjM3N2E3ZTU6c3RyaW5nOis2NTYzMTEzMTExIn1dLCJhZGRyZXNzIjp7InR5cGUiOiIwYTQ5OTA5Ni1jNDRkLTRkMmEtYmJkYi03ODM0YjI5ZjQ2ZGU6c3RyaW5nOnBoeXNpY2FsIiwidXNlIjoiOTQ5ZTUxM2QtYThmMS00ZWVlLTkwOWEtMDhjZTBlMWI3NDllOnN0cmluZzp3b3JrIiwidGV4dCI6IjQ5ODZiMTRmLWViODUtNDdhMy1iNzRlLTYxMWFmZDg0ZWUxZTpzdHJpbmc6TWFjUml0Y2hpZSBIb3NwaXRhbCBUaG9tc29uIFJvYWQgU2luZ2Fwb3JlIDEyMzAwMCJ9fX0seyJyZXNvdXJjZVR5cGUiOiI4YTE4MmQ5YS1hMDZhLTQ0MDItOWMyOC02YjQzMTRiZjY5ODU6c3RyaW5nOk9yZ2FuaXphdGlvbiIsIm5hbWUiOiJhMjZjNTY5NC0xYjg3LTRlMDItYmJlYi0wY2ZiYTM2YmM4ODc6c3RyaW5nOk1hY1JpdGNoaWUgTGFib3JhdG9yeSIsInR5cGUiOiIzMTdkZDJiNS02YThhLTQwZGItODM4Yi0zNDc5ZmVjZDM0NTI6c3RyaW5nOkFjY3JlZGl0ZWQgTGFib3JhdG9yeSIsImNvbnRhY3QiOnsidGVsZWNvbSI6W3sic3lzdGVtIjoiMjc1ZDYwYjUtOTk1OC00ZGJjLTg1MzUtZjExMDVjNDJhNjVmOnN0cmluZzpwaG9uZSIsInZhbHVlIjoiMjVjYTE3ODEtMDhkMS00NmYyLWFmZDUtZWUwY2U5OTExY2YzOnN0cmluZzorNjU2MjcxMTE4OCJ9XSwiYWRkcmVzcyI6eyJ0eXBlIjoiZTNmMGFkODQtZDFjMC00MDM4LTk1ZTctNGRlYzQ3YWY2ZmJjOnN0cmluZzpwaHlzaWNhbCIsInVzZSI6ImE1Yjg3ZGU0LTgyMjQtNDU0Zi1iNThkLWUyYWZkMzA5OGI2MTpzdHJpbmc6d29yayIsInRleHQiOiI0ODM4M2Q3MC1jNmU2LTRkNjUtYmRjMi03YTU0MjNjM2IyMWE6c3RyaW5nOjIgVGhvbXNvbiBBdmVudWUgNCBTaW5nYXBvcmUgMDk4ODg4In19fV19LCJpc3N1ZXJzIjpbeyJpZCI6IjZlNTdkYzZhLTRlZWEtNGE1NC04OTg2LWFkZWVhNzExZTEwMzpzdHJpbmc6ZGlkOmV0aHI6MHhFMzk0Nzk5MjhDYzRFZkZFNTA3NzQ0ODg3ODBCOWY2MTZiZDRCODMwIiwicmV2b2NhdGlvbiI6eyJ0eXBlIjoiMDM2Nzc5MGQtNjQzYy00YTA2LWJkYjMtNjM4YmZkMjE2Yzk4OnN0cmluZzpOT05FIn0sIm5hbWUiOiI3MDQ0OTljMC02ZjM4LTRjZmQtODQxMC0wM2Q0N2UyNDA1ZTY6c3RyaW5nOlNBTVBMRSBDTElOSUMiLCJpZGVudGl0eVByb29mIjp7InR5cGUiOiI5OWM4MTQwNy05MmI0LTRhMDctODFkMC0wZDdjZDc3YTJhNWM6c3RyaW5nOkROUy1ESUQiLCJsb2NhdGlvbiI6ImQwMGRhYjhmLTJmM2EtNDE4Mi05ODAyLWRmMDE1ZGM2YmIwYjpzdHJpbmc6ZG9ub3R2ZXJpZnkudGVzdGluZy52ZXJpZnkuZ292LnNnIiwia2V5IjoiMmNiMDA1NjEtOGJhNy00MTI4LWExYzMtMTdlMGRmZjBkZDgwOnN0cmluZzpkaWQ6ZXRocjoweEUzOTQ3OTkyOENjNEVmRkU1MDc3NDQ4ODc4MEI5ZjYxNmJkNEI4MzAjY29udHJvbGxlciJ9fV0sImxvZ28iOiJmZmRhZTk0MS1iNmUwLTQyYzctOTJhMS0yOGE3Mjg1NGU3ZDQ6c3RyaW5nOmRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBZlFBQUFESUNBTUFBQUFweCtQYUFBQUFNMUJNVkVVQUFBRE16TXpNek16TXpNek16TXpNek16TXpNek16TXpNek16TXpNek16TXpNek16TXpNek16TXpNek16TXpNek16TXplQ21pQUFBQUFFSFJTVGxNQVFMK0E3eEFnbjJEUDN6QndyMUNQRWwrSS9RQUFCd2RKUkVGVWVOcnNuZDEyMnlvUVJ2a0hJU0hOK3ovdHlVazlvVEVDUTFiVEJjMjNieU5zMEI1R0lEQVJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBaytJaytJZHg0ZzVONEI5R1EvclBBOUovSVBmU2d3TC9NRUVBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBRHdQNVpQb1A1cjdGSktBZjdjdWZCaWhQTlNrWDVobEE5dStEc1A3ZFgvSksxUDJWUGlTSW9lYkVyTHdWaDVaeCs4QzFZMjJZdFAwRnBmNmhkZWErbXExV2xpeGZlajZSY0R4ajA5c3dYYmJlQlFwaWp1ZzIwYWovU0U4YnZvNWhFdWF2QXVTS3BRZkp4VEc5MWdVckNWNmpTUUUwb1BrZTR3dWtlNzA1RXFwTE5XeHRNdFNrNGp2WEdsZCt0TGx4dlZNTm5ha0Q3bUVuZFlUVldTblY4NjBXVVhsMzRSTXk3QmVtcHlHek43cEFibVhFQTZiZnZLMHUzMnVURktLVk0wcjBZdzFNVGNGdnA4aVZMUEQwKzlnSFF5KzdyU2YzZWVqcDJIdUZjc21sZGlFejBGektYZlNSdzNxZTA4WHFkOWRQNlFLT05ua3U0bEczTlNiL1JCdEt0S3QxdHRkQkppWWIyVkk3YnJjN3RjOElZb3RKekhVQjBjK08rVDNyVFF1TEtzWlJxcHprVFM3ZFpJNHZvK3FKbmRFR084RXplY3lqYWM2L0lUTjJLT1dhVUxJVC9hTGRlVW5xcGRpN1ZXMitLeWMyOUZMM3M3ZTNoaTVMVFNoZVdXcHlXbEg0WHptdldqbmlPaUZOM1lXRGl2V0k5Mld1azVjdDJDMHAzSnpsOVlONjZXSTVJVi9WeUY4NnIxYTE3cEg1VU1DMHBYL0R3WFZVNTI0S3M1WWdEWm1MNHpHejF3ODBwMzNQajFwTXZjaSt0YzJjRklqbWhIMmRXVmZ1YVZMdUxqeTllVHpncU9ycWV3djB2dW0vMUtSNCsyYTZEaDVwWE83VjlPK3M0S1JKUEFEdXhOanRqRkNDay9DbHRFemdmelN0ZXJTdmRaUVplRG95eXF4UWd1UjFsWG1CbEkvOVBTZWJacGJPZThiaXZ0MmJGSzlZYUs0ZUhlN05MTmF0TFAzcUdZTGZMNzFSb012QjZYdTk2SjNUV3Q5TFRvUU01em04WWZ4YkhJRVNQWlhYVy90b3ZUU28rUHFGeE5lc3dacWpPL1gwOU92QmdpOU9jSHc3bGxVdWtjditkaTBybmVxZjk5dVhvS2dsTU13YWxsN3gvbXkwbWxQNXBpVm52M2Z1WisxOTN4bnBUWUx6M1NqZWpQTFhwTzZUdFhielhwZklVY2VKSG1Qc1hBSnNiSSthTDdmdnNwcFZzT1g3dWFkSjlGdnVUNjNQeHNaQVEzVU14eWdMeVd2c2s2L2x1a3U0MGZiOHR0b2xERkZiMVpRUTYvbVJrdjFpVzlpMUo2Qy8xYWVqQWN2UVBWbVV0NkZCMmNuMjZKekRPNFRzYUxjV2VhVGJvN0luMDRYMDg2OTZYeFRucmttekdDSGltbUpwTHVOYVBpNzFmK0tPa3RlNUlLOU9yUzc0aW5nUFNmSmQxb0lTRDlaMG0vaFBoQjBvKy9MZDNNTUdVclNVNjhzOXlVelhTTzNzdWhXK0JoK0pqMG95ejJzblpxZ3BjemQ1aXdwdlJ2bUtmWHBZL1AweWVTZnNnSE9obGl3dExTN2NCU2lSMWFaRlAzMHErQnQzZlhiSzloUTJUcis0clNjKzhkZmxYQ08ybDZwWStQSXM1cEYxeHM0a21iWFZCNnowSldSUmRIKzZCMHc4VmVveWRlV2xWODR4YVVMbnZYMDh2RXpObitISk91K3RmVDFjU2JLUExld3ZXa2MvYzEvWXRzNFNsSitESHB1bnNGMzA2OVhTcnc3VmhRZWw0Z0hOM1F1SE84akVrL084Y0MrVW8vcFhSK3ZHMExTbi9aWHhsWHlJb2M2MFBTaGVsZHd2ZHpiNEhXM0k3MXBPLzB3SFlxT0lwOHY0MUpUNTJUTmpmNWp4MjRmbUU5NldMckc3L2Jzb002ZWhDR3BKOHMwL1pWM2s4cW5UT2RYMUI2NkhPZ2I0YjVLUmZ0bDU0ZkM3b3Z5dlpacFh0Nkp5NG8zWnFlZE92TVRkc2xQVWhEMHJsV3h2Vk1GdFMwUDFVT25QdldrODRYZGIwRElYVy9rSGlNU0xlbTdyTU1LRG10OUowSG1ndEsvM0JnN0doZ09HTENnUFQ4YWZwMXBkVEV4NDg4Nm5ndEtGMmM5T3BzZ1ZEYk9LQ0pPUWFraSsxVnJGaSt3cmlKcGZOYS9vclNoY3JXMjg2akxZc3l5ZlpMbDhTRXRuTTY1ajFTTEgrd1hWRzZqYzBEWUk5ODZGdWpLSm5RTFYwYzFNcnc3c081bi9md3dEZmtvajlnZkQ0b3poeUZBVVZNcUJSbFlyQ2Qwb1VuUnJraXlFek9QRk5MRnpUelQ1VmxCWGQzT204b3prQnRPT2REUFprVTlrOS9QQ3BMa0hhcm5aVWZJaFhPdjAvNklTdjBTT2N2ai8xYjl0emZrTjVHM3g3ZWJkSWgzNFdmRjZ0cERycllLNlBVcGQvNGZKUzNicFhhcnRPSk4rU1JEQlhPdjBsNm02RXpaMXozNWx3OWszUk8wMVdNRkJVNEg0KzIxbE1iYjhYczB2bHZZVkhwM1BVcUtDY2FPRFVzbmJOTFNSNWNUQytkWitwcFZlbENuS2ExMTdlTlROUWtTVkZpVTJ0UCtRclNPVnZaWmFVTHF3dnRQQ2gvamRNYjNSTjk5UU9rb2p2OExzUVMway9PNyt0S2YrTk1UOTZOUDBVdkx2aW5SbTlKbjI0d1ZyYkRDYkdJZEY0eFZCTkoveEpTZTZVZW8vQmovOUkvN0R5MFB2cm5KeTVvcFNJUlJaWDBhUVVBQVB6WDNoM1VBQUNBUUF4N1lBRC9hbkZCQ05kYW1JQUJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQURBbW1vZUs5SHppQjVJOUVCWG54OEFBQUFBQUFBQUFMQm1BSVpLbXpXSW54eU9BQUFBQUVsRlRrU3VRbUNDIiwiJHRlbXBsYXRlIjp7Im5hbWUiOiI1NjhhNjdiNC0zNzhjLTQ5MjgtYjNhNi05NDc2ZDcxYjBhOWU6c3RyaW5nOkhFQUxUSENFUlQiLCJ0eXBlIjoiMWZlNTlmNmMtODhlNC00MTUzLTg1NjgtMzAwOTU5ZDZiNzlhOnN0cmluZzpFTUJFRERFRF9SRU5ERVJFUiIsInVybCI6ImZhZThkMGJkLTExMWQtNGNjNC1hZGUzLWYyMDhlMjRhNTFiOTpzdHJpbmc6aHR0cHM6Ly9tb2gtaGVhbHRoY2VydC1yZW5kZXJlci5uZXRsaWZ5LmFwcC8ifX0sInNpZ25hdHVyZSI6eyJ0eXBlIjoiU0hBM01lcmtsZVByb29mIiwidGFyZ2V0SGFzaCI6IjBjOTIwYTEzNmZhODc3YjkzMzNmYjYyOWFjNmY2YjU0ZTAyODc5OWY2NzVkNTAxYjE3YzM1MjVlZGY1NDZkZDEiLCJwcm9vZiI6W10sIm1lcmtsZVJvb3QiOiIwYzkyMGExMzZmYTg3N2I5MzMzZmI2MjlhYzZmNmI1NGUwMjg3OTlmNjc1ZDUwMWIxN2MzNTI1ZWRmNTQ2ZGQxIn0sInByb29mIjpbeyJ0eXBlIjoiT3BlbkF0dGVzdGF0aW9uU2lnbmF0dXJlMjAxOCIsImNyZWF0ZWQiOiIyMDIxLTA1LTE5VDAzOjA5OjQxLjIyN1oiLCJwcm9vZlB1cnBvc2UiOiJhc3NlcnRpb25NZXRob2QiLCJ2ZXJpZmljYXRpb25NZXRob2QiOiJkaWQ6ZXRocjoweEUzOTQ3OTkyOENjNEVmRkU1MDc3NDQ4ODc4MEI5ZjYxNmJkNEI4MzAjY29udHJvbGxlciIsInNpZ25hdHVyZSI6IjB4NzMwOTFlZjE2MjI2MzIyYzIxMDgyZmI2YWU3MjQzZTJkMDZjMWNhNzVjZTAxZDA5MDQ5YWI5ODQyNjcwNzdiMzY2Mzk3OWFiYWZkZWZlZjllMjNjMzRlOThlZDkyZjM2NDM4N2M1ZjZhYmIzZjk1YzBjYjE3MGE4ZTJhODJhODcxYyJ9XX0="
+            }
+          ]
+        }
+
         if (valuesAlreadySeen.indexOf(documentId) !== -1) {
           throw new Error(`Duplicate ID - ${documentId}`);
         }
+
         valuesAlreadySeen.push(documentId);
         const findDocId = await this.documentModel.findOne({ documentId });
         if (findDocId != null) {
           throw new Error(`Document ID - ${documentId} already in use`);
         } else {
-          const hcpcrDoc = { ...document, ...issuers };
+
+          const hcpcrDoc = { ...document, ...issuers, ...qrcosde };
           const documentId = document['id'];
+
           const hcpcrJSON = `${documentId}-HCPCR.json`;
-          console.log(hcpcrJSON);
           const dictString = JSON.stringify(hcpcrDoc);
           const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
-          console.log(folderPath);
           const finalFile = `${folderPath}/${hcpcrJSON}`;
-          console.log(finalFile);
           fs.writeFileSync(finalFile, dictString);
           const bufferReadFile = fs.readFileSync(finalFile);
           const readFile = bufferReadFile.toString();
           rawJSONArr.push(JSON.parse(readFile));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-          console.log(JSON.stringify(hcpcrDoc,null,2));
         }
       }),
     );
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
-
-    
-    
-    
 
     let merkleRoot;
     const targetArr = [];
@@ -2159,43 +2056,104 @@ export class JedsignService {
         const hcpcrJSON = `${rawDocInfo.id}-HCPCR.json`;
         const finalFile = `${folderPath}/${hcpcrJSON}`;
         fs.writeFileSync(finalFile, wrapDocInfo);
+
         const file = Buffer.from(fs.readFileSync(finalFile).toString('base64'));
         const docRoot = wrappedDoc['signature'].targetHash;
         const docName = `${rawDocInfo.id}-HCPCR`;
         const docStore = rawDocInfo.issuers[0].documentStore;
-        const name = `${rawDocInfo.recipient.patientFirstName} ${rawDocInfo.recipient.patientLastName}`;
+        const name = `${rawDocInfo.fhirBundle.patientFirstName} ${rawDocInfo.fhirBundle.patientLastName}`;     
 
+        // console.log(rawDocInfo.id);
+        // console.log(rawDocInfo.name);
+        // console.log(rawDocInfo.validFrom);
+        // console.log(rawDocInfo.fhirVersion);
+        // console.log(rawDocInfo.fhirBundle.resourceType);
+        // console.log(rawDocInfo.fhirBundle.type);
+
+        // console.log(rawDocInfo.fhirBundle.entry[0].resourceType);
+        // console.log(rawDocInfo.fhirBundle.entry[0].extension[0].url);
+        // console.log(rawDocInfo.fhirBundle.entry[0].extension[0].code.text);
        
+        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[0].type);
+        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[0].value);
+
+        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[1].type.text);
+        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[1].value);
+
+        // console.log(rawDocInfo.fhirBundle.entry[0].name[0].text);
+        // console.log(rawDocInfo.fhirBundle.entry[0].gender);
+        // console.log(rawDocInfo.fhirBundle.entry[0].birthDate);
+
+        // console.log(rawDocInfo.fhirBundle.entry[1].resourceType);
+        // console.log(rawDocInfo.fhirBundle.entry[1].type.coding[0].system);
+        // console.log(rawDocInfo.fhirBundle.entry[1].type.coding[0].code);
+        // console.log(rawDocInfo.fhirBundle.entry[1].type.coding[0].display);
+        // console.log(rawDocInfo.fhirBundle.entry[1].collection.collectedDateTime);
+
+        // console.log(rawDocInfo.fhirBundle.entry[2].resourceType);
+        // console.log(rawDocInfo.fhirBundle.entry[2].identifier[0].value);
+        // console.log(rawDocInfo.fhirBundle.entry[2].identifier[0].type);
+        // console.log(rawDocInfo.fhirBundle.entry[2].code.coding[0].system);
+        // console.log(rawDocInfo.fhirBundle.entry[2].code.coding[0].code);
+        // console.log(rawDocInfo.fhirBundle.entry[2].code.coding[0].display);
+        // console.log(rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].system);
+        // console.log(rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].code);
+        // console.log(rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].display);
+
+        // console.log(rawDocInfo.fhirBundle.entry[2].effectiveDateTime);
+        // console.log(rawDocInfo.fhirBundle.entry[2].status);
+        // console.log(rawDocInfo.fhirBundle.entry[2].performer.name[0].text);
+        // console.log(rawDocInfo.fhirBundle.entry[2].qualification[0].identifier);
+        // console.log(rawDocInfo.fhirBundle.entry[2].qualification[0].issuer);
+
+        // console.log(rawDocInfo.fhirBundle.entry[3].resourceType);
+        // console.log(rawDocInfo.fhirBundle.entry[3].name);
+        // console.log(rawDocInfo.fhirBundle.entry[3].type);
+        // console.log(rawDocInfo.fhirBundle.entry[3].endpoint.address);
+
+        // console.log(rawDocInfo.fhirBundle.entry[3].contact.telecom[0].system);
+        // console.log(rawDocInfo.fhirBundle.entry[3].contact.telecom[0].value);
+
+        // console.log(rawDocInfo.fhirBundle.entry[3].contact.address.type);
+        // console.log(rawDocInfo.fhirBundle.entry[3].contact.address.use);
+        // console.log(rawDocInfo.fhirBundle.entry[3].contact.address.text);
+
+        // console.log(rawDocInfo.fhirBundle.entry[4].resourceType);
+        // console.log(rawDocInfo.fhirBundle.entry[4].name);
+        // console.log(rawDocInfo.fhirBundle.entry[4].type);
+
+        // console.log(rawDocInfo.fhirBundle.entry[4].contact.telecom[0].system);
+        // console.log(rawDocInfo.fhirBundle.entry[4].contact.telecom[0].value);
+        // console.log(rawDocInfo.fhirBundle.entry[4].contact.address.type);
+        // console.log(rawDocInfo.fhirBundle.entry[4].contact.address.use);
+        // console.log(rawDocInfo.fhirBundle.entry[4].contact.address.text);
 
         //Save Student Info to DB
         const patientId = await this.studentModel.findOne({
-          patientId: rawDocInfo.recipient.patientId,
+          patientId: "H00047",
         });
+         
         if (patientId == null) {
           const patient = new this.studentModel({
-            patientId: rawDocInfo.recipient.patientId,
-            patientNRIC: rawDocInfo.recipient.patientNRIC,
-            patientEmail: rawDocInfo.recipient.patientEmail,
-            patientName: `${name}`,
-            gender: rawDocInfo.recipient.gender,
-            patientPPN: rawDocInfo.recipient.patientPPN,
-            nationally: rawDocInfo.recipient.nationally,
-            dob: rawDocInfo.recipient.dob,
-            effectiveDate: rawDocInfo.recipient.effectiveDate,
+            patientId: "H00047",
+            patientNRIC: rawDocInfo.fhirBundle.entry[0].identifier[1].value,
+            
+            patientEmail: "eugenetan@hotmail.com",
+            patientName: rawDocInfo.fhirBundle.entry[0].name[0].text,
+            gender: rawDocInfo.fhirBundle.entry[0].gender,
+            patientPPN: rawDocInfo.fhirBundle.entry[0].identifier[0].value,
+            nationally: rawDocInfo.fhirBundle.entry[0].extension[0].code.text,
+            //dob: rawDocInfo.fhirBundle.entry[0].birthDate,
+            //effectiveDate: rawDocInfo.fhirBundle.entry[2].effectiveDateTime,
           });
-           
+
           await patient.save();
+
         }
 
-        
-
-        const patientInfo = await this.studentModel.findOne({
-          patientId: rawDocInfo.recipient.patientId,
-        });
-
-        console.log('hello');
-
-        //console.log(patientInfo);
+        //const patientInfo = await this.studentModel.findOne({
+          //patientId: rawDocInfo.fhirBundle.entry[0].identifier[1].value,
+        //});
 
         //Save Doc Info to DB
         const doc = new this.documentModel({
@@ -2204,52 +2162,50 @@ export class JedsignService {
           docInfo,
           wrapDocInfo,
           docType: 'HCPCR',
-          documentId: rawDocInfo.id,
-          patientTKC: rawDocInfo.recipient.patientTKC,
-          patientTKN: rawDocInfo.recipient.patientTKN,
-          collectedDate: rawDocInfo.recipient.collectedDate,
-          effectiveDate: rawDocInfo.recipient.effectiveDate,
-          patientId: patientInfo._id,
-          resultCode: rawDocInfo.recipient.resultCode,
-          result: rawDocInfo.recipient.result,
-          performer: rawDocInfo.recipient.performer,
-          identifier: rawDocInfo.recipient.identifier,
-          clinicName: rawDocInfo.recipient.clinicName,
-          officeAdd: rawDocInfo.recipient.officeAdd,
-          officeNo: rawDocInfo.recipient.officeNo,
-          webAdd: rawDocInfo.recipient.webAdd,
-          labName: rawDocInfo.recipient.labName,
-          labAdd: rawDocInfo.recipient.labAdd,
-          labNo: rawDocInfo.recipient.labNo,
+          //documentId: rawDocInfo.id,
+          patientTKC: rawDocInfo.fhirBundle.entry[1].type.coding[0].code,
+          patientTKN: rawDocInfo.fhirBundle.entry[1].type.coding[0].display,
+          //collectedDate: rawDocInfo.fhirBundle.entry[1].collection.collectedDateTime,
+          //effectiveDate: rawDocInfo.fhirBundle.entry[2].effectiveDateTime,
+          //patientId: patientInfo._id,
+          resultCode: rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].code,
+          result: rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].display,
+          performer: rawDocInfo.fhirBundle.entry[2].performer.name[0].text,
+          identifier: rawDocInfo.fhirBundle.entry[2].qualification[0].identifier,
+          clinicName: rawDocInfo.fhirBundle.entry[3].name,
+          officeAdd: rawDocInfo.fhirBundle.entry[3].endpoint.address,
+          officeNo: rawDocInfo.fhirBundle.entry[3].contact.telecom[0].value,
+          webAdd: rawDocInfo.fhirBundle.entry[3].endpoint.address,
+          labName: rawDocInfo.fhirBundle.entry[3].name,
+          labAdd: rawDocInfo.fhirBundle.entry[4].contact.address.text,
+          labNo: rawDocInfo.fhirBundle.entry[4].contact.telecom[0].value,
           issuedDate: 0,
           revokedDate: 0,
           isBatchRevoke: false,
         });
+
         await doc.save();
 
-
-        console.log('yes');
-
-        const link = `https://jviewer.sandbox158.run/`;
-        this.mailerService.sendDICT(
-          rawDocInfo.recipient.email,
-          link,
-          name,
-          issuers.issuers[0].name,
-          rawDocInfo.id,
-          docName,
-          file,
-        );
+        // const link = `https://jviewer.sandbox158.run/`;
+        // this.mailerService.sendDICT(
+        //   rawDocInfo.recipient.email,
+        //   link,
+        //   name,
+        //   issuers.issuers[0].name,
+        //   rawDocInfo.id,
+        //   docName,
+        //   file,
+        // );
 
         this.usersService.etherCheck(getUserAddr);
 
         const docs = {
           docName,
-          email: rawDocInfo.recipient.email,
+          //email: rawDocInfo.recipient.email,
           name,
           docHash: `0x${docRoot}`,
-          documentId: rawDocInfo.id,
-          completionDate: rawDocInfo.recipient.completionDate,
+          //documentId: rawDocInfo.id,
+          //completionDate: rawDocInfo.recipient.completionDate,
         };
         merkleRoot = `0x${wrappedDoc['signature'].merkleRoot}`;
         certArr.push(docs);
@@ -2292,61 +2248,6 @@ export class JedsignService {
     console.log('CreateDICT', duration);
     return { certArr };
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2935,16 +2836,6 @@ export class JedsignService {
     console.log('CreateDICT', duration);
     return { certArr };
   }
-
- 
-
-
-
-
-
-
-
-
   async createTwoApproverCertificates(apiToken: string, Certificate2DTO: Certificate2DTO) {
     logger.info('Jedsign.service: createCert2Doc: Before the call');
     const certArr = [];
@@ -3170,18 +3061,6 @@ export class JedsignService {
     console.log('Create2Approver', duration);
     return { certArr };
   }
-
-
-
-
-
-
-
-
-
-
-
-
   async createNOA(apiToken: string, noaDto: NoaDto) {
     const arr = noaDto.noa;
     await this.web3Service.updateGasPrice();
@@ -3320,7 +3199,6 @@ export class JedsignService {
 
     return { otpRequired: otpIssueNOA, hashArr };
   }
-
   async verifyDocumentOA(docHash: string) {
     const getWrapInfo = await this.documentModel.findOne({ docHash }, { _id: 0, wrapDocInfo: 1 });
     const wrapJson = JSON.parse(getWrapInfo.wrapDocInfo);
@@ -3334,7 +3212,6 @@ export class JedsignService {
     });
     return statusArr[0];
   }
-
   async verifyDocumentOAFinance(docHash: string) {
     const getWrapInfo = await this.batchesModel.findOne({ docHash }, { _id: 0, wrapDocInfo: 1 });
     const wrapJson = JSON.parse(getWrapInfo.wrapDocInfo);
@@ -3348,7 +3225,6 @@ export class JedsignService {
     });
     return statusArr[0];
   }
-
   async sign(apiToken: string, docHash: string) {
     const web3 = await this.web3Service.getWeb3();
     await this.web3Service.updateGasPrice();
@@ -3412,7 +3288,6 @@ export class JedsignService {
 
     return { signed, docHash };
   }
-
   async acceptNOA(apiToken: string, docHash: string) {
     const web3 = await this.web3Service.getWeb3();
     await this.web3Service.updateGasPrice();
@@ -3470,7 +3345,6 @@ export class JedsignService {
 
     return { signed, docHash };
   }
-
   async resendOtpSign(apiToken: string) {
     const userInfo = await this.tokensService.findOneByToken(apiToken);
     const userId = userInfo._id;
@@ -3487,7 +3361,6 @@ export class JedsignService {
     await this.otpModel.findOneAndRemove({ userId, mobileNo });
     await this.usersService.sendOtp(user);
   }
-
   async verifyDocument(apiToken: string, docHash: string) {
     const web3 = await this.web3Service.getWeb3();
     const factoryContract = new web3.eth.Contract(
@@ -3509,7 +3382,6 @@ export class JedsignService {
 
     return { signed, docHash };
   }
-
   async getDocument(docHash: string) {
     const doc = await this.documentModel.findOne({ docHash }, { __v: 0, _id: 0 });
     const docInfo = JSON.parse(doc.docInfo);
@@ -3524,7 +3396,6 @@ export class JedsignService {
     };
     return { document };
   }
-
   async getNOAByInv(docHash: string) {
     const docInfo = [];
     const arr = await this.batchesModel.find({ invHashArr: docHash, docType: 'NOA' });
@@ -3556,7 +3427,6 @@ export class JedsignService {
     }
     return docInfo[0];
   }
-
   async getNOAbyFR(docHash: string) {
     const docInfo = [];
     const doc = [];
@@ -3591,7 +3461,6 @@ export class JedsignService {
     }
     return doc;
   }
-
   async verifyOTPSigning(otp: string, apiToken: string, _docHash: string) {
     const findOne = await this.usersService.findOneByOTP(otp);
     const mobileNo = findOne.mobileNo;
@@ -3678,7 +3547,6 @@ export class JedsignService {
       }
     }
   }
-
   async verifyOTPIssuing(otp: string) {
     const web3 = await this.web3Service.getWeb3();
     await this.web3Service.updateGasPrice();
@@ -3861,7 +3729,6 @@ export class JedsignService {
       return { list: arr2 };
     }
   }
-
   async getDocumentByToken(apiToken: string) {
     const startTime = new Date();
     const web3 = await this.web3Service.getWeb3();
@@ -4165,7 +4032,6 @@ export class JedsignService {
     );
     return issuedDocs;
   }
-
   async getInvFinancingList(apiToken: string) {
     const financierInfo = await this.tokensService.findOneByToken(apiToken);
     const financierId = financierInfo._id;
@@ -4296,7 +4162,6 @@ export class JedsignService {
     }
     return { invoices };
   }
-
   async getDeclineInvoice(apiToken: string) {
     const financierInfo = await this.tokensService.findOneByToken(apiToken);
     const financierId = financierInfo._id;
@@ -4330,7 +4195,6 @@ export class JedsignService {
       return { declineArr };
     }
   }
-
   async declineInvoice(invoiceNo: any, apiToken: string) {
     const declineArr = [];
     let supplierEmail;
@@ -4601,6 +4465,7 @@ export class JedsignService {
     console.log('getInvList:', getUserInfo.email, duration);
     return { invoices: invArr };
   }
+
   async contractStatus(_docStore: string, docHash: string) {
     const web3 = await this.web3Service.getWeb3();
     const docStore = _docStore;
@@ -5302,11 +5167,13 @@ export class JedsignService {
 
     return cpuCount * 2;
   }
+
   private hashToBuffer(hash: Hash): Buffer {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore https://github.com/Microsoft/TypeScript/issues/23155
     return Buffer.isBuffer(hash) && hash.length === 32 ? hash : Buffer.from(hash, 'hex');
   }
+
   // private async wrapDocuments(rawJSONArr: any, workerCount: number) {
   //   const minSize = rawJSONArr.length / workerCount;
   //   const workers: Array<WrapperWorker> = [];
