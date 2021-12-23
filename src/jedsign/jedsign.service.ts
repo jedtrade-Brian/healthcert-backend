@@ -587,6 +587,28 @@ export class JedsignService {
     return { certArr };
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   async getAllCertificate(apiToken: string) {
     let loginUserEmail = '';
     try {
@@ -601,6 +623,8 @@ export class JedsignService {
         process.env.DOCSTORE_FACTORY,
       );
       const docStore = await factoryContract.methods.assets(getUserAddr).call();
+
+      
       //logger.info('Jedsign.service: getAllCertificate: docStore: ', docStore);
       //const getCerts = await this.documentModel.find({ issuerDocStore: docStore });
 
@@ -621,6 +645,7 @@ export class JedsignService {
           },
         ],
       });
+
       const newCerts = await this.documentModel.find({ issuerDocStore: docStore, issuedDate: 0 });
       const revokedCerts = await this.documentModel.find({
         issuerDocStore: docStore,
@@ -643,6 +668,7 @@ export class JedsignService {
           DocumentId: document.documentId,
         });
       });
+
       //logger.info('Jedsign.service: getAllCertificate: nerCertsMer: ', nerCertsMer);
       // logger.info('Jedsign.service: getAllCertificate: revokeCertMer: ', revokeCertMer);
       //Get Distinct Merkle root
@@ -790,6 +816,7 @@ export class JedsignService {
           }
         }),
       );
+
       // logger.info(
       //   'Jedsign.service: getAllCertificate: newCertsWithIssuedate: ',
       //   newCertsWithIssuedate,
@@ -812,14 +839,15 @@ export class JedsignService {
             for (let i = 0; i < certInfo['approvers'].length; i++) {
               approvers2 = certInfo['approvers'];
             }
+
             docInfo = {
               docHash: document.docHash,
               docType: document.docType,
-              studentId: certInfo.recipient.studentId,
-              studentName: certInfo.recipient.name,
-              studentLastName: certInfo.recipient.lastName,
-              courseName: certInfo.recipient.courseName,
-              transcriptId: certInfo.id,
+              transcriptId: certInfo.Id,
+              patientId: certInfo.patientId,
+              name: certInfo.fhirBundle.entry[0].name[0].text,
+              testName: certInfo.fhirBundle.entry[1].type.coding[0].display,
+              effectiveDate: certInfo.fhirBundle.entry[2].effectiveDateTime,
               issuedOn: document.issuedDate,
               revoked: document.revokedDate, // revokedDate,
               wrapDocInfo: document.wrapDocInfo,
@@ -828,27 +856,34 @@ export class JedsignService {
               // isRevokedDate: isRevokedDate,
               // documentId: document.documentId,
             };
+
             certificateInfo.push(docInfo);
           } else {
             const docInfo = {
               docHash: document.docHash,
               docType: document.docType,
-              studentId: certInfo.recipient.studentId,
-              studentName: certInfo.recipient.name,
-              studentLastName: certInfo.recipient.lastName,
-              courseName: certInfo.recipient.courseName,
-              transcriptId: certInfo.id,
+              transcriptId: certInfo.Id,
+              patientId: certInfo.patientId,
+              name: certInfo.fhirBundle.entry[0].name[0].text,
+              testName: certInfo.fhirBundle.entry[1].type.coding[0].display,
+              effectiveDate: certInfo.fhirBundle.entry[2].effectiveDateTime,
               issuedOn: document.issuedDate,
               revoked: document.revokedDate,
               wrapDocInfo: document.wrapDocInfo,
               // isissuedDate: isissuedDate,
               // isRevokedDate: isRevokedDate,
               // documentId: document.documentId,
+              
             };
+            
             certificateInfo.push(docInfo);
+            
           }
+
+          //console.log(certificateInfo);
         }),
       );
+
       // logger.info('Jedsign.service: getAllCertificate: certificateInfo: ', certificateInfo);
       const endTime = new Date();
       const duration = (endTime.getTime() - startTime.getTime()) / 1000;
@@ -1023,6 +1058,32 @@ export class JedsignService {
       throw e;
     }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async verifyOTPApproval(updateCert2: UpdateCert2, docHash: string, apiToken: string) {
     const getUserInfo = await this.tokensService.findOneByToken(apiToken);
@@ -1241,6 +1302,18 @@ export class JedsignService {
     return { batchArr };
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
   async getStudents(apiToken: string) {
     const startTime = new Date();
     const web3 = await this.web3Service.getWeb3();
@@ -1254,14 +1327,14 @@ export class JedsignService {
     const docStore = await factoryContract.methods.assets(getUserAddr).call();
     const documentInfo = await this.documentModel.find({ issuerDocStore: docStore });
 
-    const studentIdArr = [];
+    const patientIdArr = [];
     await Promise.all(
       documentInfo.map(document => {
-        const studentId = document.studentId;
-        studentIdArr.push(studentId);
+        const patientId = document.patientId;
+        patientIdArr.push(patientId);
       }),
     );
-    const uniqueSet = new Set(studentIdArr);
+    const uniqueSet = new Set(patientIdArr);
     const backToArray = [...uniqueSet];
 
     const studentArr = [];
@@ -1271,10 +1344,12 @@ export class JedsignService {
           { _id: student },
           { __v: 0, updated: 0, created: 0 },
         );
-        const documentArr = await this.documentModel.find({ studentId: student });
+
+        const documentArr = await this.documentModel.find({ patientId: student });
         const students = {
           noOfDocs: documentArr.length,
         };
+
         const info = Object.assign(studentInfo.toObject(), students);
         studentArr.push(info);
       }),
@@ -1285,6 +1360,18 @@ export class JedsignService {
     return { studentArr };
   }
 
+
+
+
+
+
+
+
+
+
+
+
+  
   async getStudentsFromBatch(apiToken: string, batchId: string) {
     const startTime = new Date();
     const web3 = await this.web3Service.getWeb3();
@@ -1466,18 +1553,6 @@ export class JedsignService {
         console.log(err);
       });
   }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1957,8 +2032,16 @@ export class JedsignService {
     const web3 = await this.web3Service.getWeb3();
     const getUserInfo = await this.tokensService.findOneByToken(apiToken);
 
+    
+
     const getCompanyName = getUserInfo.companyName;
     const getUserAddr = getUserInfo.wallet.address;
+
+    const haha = getUserInfo.wallet.iv;
+
+    console.log(haha);
+
+
     const getDomain = getUserInfo.domain;
     const factoryContract = new web3.eth.Contract(
       JSON.parse(process.env.DocStoreFactoryABI),
@@ -1995,16 +2078,19 @@ export class JedsignService {
      await Promise.all(
        HCPCRDTO.documents.map(async document => {
         const documentId = document['Id'];
+        //const patientId = document['patientId'];
         const reference = document['reference'];
         const notarisedOn = document['notarisedOn'];
         const passportNumber = document['passportNumber'];
+
+        console.log(documentId);
 
         const qrcosde = {
         "notarisationMetadata": {
             "reference": reference,
             "notarisedOn": notarisedOn,
             "passportNumber": passportNumber,
-            "url": "https://rinkeby.opencerts.io/?q=%7B%22type%22%3A%22DOCUMENT%22%2C%22payload%22%3A%7B%22uri%22%3A%22https%3A%2F%2Fidev.jupyton.com%3A8443%2Fdocument%2F6cfbbcbf-85a1-4644-b61a-952c12376502.json%22%2C%22key%22%3A%222b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c%22%7D%7D"
+            "url": "https://dev.opencerts.io/?q=%7B%22type%22%3A%22DOCUMENT%22%2C%22payload%22%3A%7B%22uri%22%3A%22https%3A%2F%2Fidev.jupyton.com%3A8443%2Fdocument%2F6cfbbcbf-85a1-4644-b61a-952c12376502.json%22%2C%22key%22%3A%222b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c%22%7D%7D"
           },
           "logo": "data:image/png;base64,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",
           "attachments": [
@@ -2045,12 +2131,17 @@ export class JedsignService {
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
 
+
+
+    //console.log(wrappedDocuments);
+
     let merkleRoot;
     const targetArr = [];
     await Promise.all(
       wrappedDocuments.map(async wrappedDoc => {
         const wrapDocInfo = JSON.stringify(wrappedDoc);
         const rawDocInfo = getData(wrappedDoc);
+
         const docInfo = JSON.stringify(rawDocInfo);
         const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
         const hcpcrJSON = `${rawDocInfo.id}-HCPCR.json`;
@@ -2063,97 +2154,38 @@ export class JedsignService {
         const docStore = rawDocInfo.issuers[0].documentStore;
         const name = `${rawDocInfo.fhirBundle.patientFirstName} ${rawDocInfo.fhirBundle.patientLastName}`;     
 
-        // console.log(rawDocInfo.id);
-        // console.log(rawDocInfo.name);
-        // console.log(rawDocInfo.validFrom);
-        // console.log(rawDocInfo.fhirVersion);
-        // console.log(rawDocInfo.fhirBundle.resourceType);
-        // console.log(rawDocInfo.fhirBundle.type);
-
-        // console.log(rawDocInfo.fhirBundle.entry[0].resourceType);
-        // console.log(rawDocInfo.fhirBundle.entry[0].extension[0].url);
-        // console.log(rawDocInfo.fhirBundle.entry[0].extension[0].code.text);
-       
-        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[0].type);
-        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[0].value);
-
-        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[1].type.text);
-        // console.log(rawDocInfo.fhirBundle.entry[0].identifier[1].value);
-
-        // console.log(rawDocInfo.fhirBundle.entry[0].name[0].text);
-        // console.log(rawDocInfo.fhirBundle.entry[0].gender);
-        // console.log(rawDocInfo.fhirBundle.entry[0].birthDate);
-
-        // console.log(rawDocInfo.fhirBundle.entry[1].resourceType);
-        // console.log(rawDocInfo.fhirBundle.entry[1].type.coding[0].system);
-        // console.log(rawDocInfo.fhirBundle.entry[1].type.coding[0].code);
-        // console.log(rawDocInfo.fhirBundle.entry[1].type.coding[0].display);
-        // console.log(rawDocInfo.fhirBundle.entry[1].collection.collectedDateTime);
-
-        // console.log(rawDocInfo.fhirBundle.entry[2].resourceType);
-        // console.log(rawDocInfo.fhirBundle.entry[2].identifier[0].value);
-        // console.log(rawDocInfo.fhirBundle.entry[2].identifier[0].type);
-        // console.log(rawDocInfo.fhirBundle.entry[2].code.coding[0].system);
-        // console.log(rawDocInfo.fhirBundle.entry[2].code.coding[0].code);
-        // console.log(rawDocInfo.fhirBundle.entry[2].code.coding[0].display);
-        // console.log(rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].system);
-        // console.log(rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].code);
-        // console.log(rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].display);
-
-        // console.log(rawDocInfo.fhirBundle.entry[2].effectiveDateTime);
-        // console.log(rawDocInfo.fhirBundle.entry[2].status);
-        // console.log(rawDocInfo.fhirBundle.entry[2].performer.name[0].text);
-        // console.log(rawDocInfo.fhirBundle.entry[2].qualification[0].identifier);
-        // console.log(rawDocInfo.fhirBundle.entry[2].qualification[0].issuer);
-
-        // console.log(rawDocInfo.fhirBundle.entry[3].resourceType);
-        // console.log(rawDocInfo.fhirBundle.entry[3].name);
-        // console.log(rawDocInfo.fhirBundle.entry[3].type);
-        // console.log(rawDocInfo.fhirBundle.entry[3].endpoint.address);
-
-        // console.log(rawDocInfo.fhirBundle.entry[3].contact.telecom[0].system);
-        // console.log(rawDocInfo.fhirBundle.entry[3].contact.telecom[0].value);
-
-        // console.log(rawDocInfo.fhirBundle.entry[3].contact.address.type);
-        // console.log(rawDocInfo.fhirBundle.entry[3].contact.address.use);
-        // console.log(rawDocInfo.fhirBundle.entry[3].contact.address.text);
-
-        // console.log(rawDocInfo.fhirBundle.entry[4].resourceType);
-        // console.log(rawDocInfo.fhirBundle.entry[4].name);
-        // console.log(rawDocInfo.fhirBundle.entry[4].type);
-
-        // console.log(rawDocInfo.fhirBundle.entry[4].contact.telecom[0].system);
-        // console.log(rawDocInfo.fhirBundle.entry[4].contact.telecom[0].value);
-        // console.log(rawDocInfo.fhirBundle.entry[4].contact.address.type);
-        // console.log(rawDocInfo.fhirBundle.entry[4].contact.address.use);
-        // console.log(rawDocInfo.fhirBundle.entry[4].contact.address.text);
-
         //Save Student Info to DB
+
         const patientId = await this.studentModel.findOne({
-          patientId: "H00047",
+          patientId: rawDocInfo.patientId,
         });
+
          
+        const dobUnix = new Date(rawDocInfo.fhirBundle.entry[0].birthDate).getTime() / 1000;
+        const effectiveDateUnix = new Date(rawDocInfo.fhirBundle.entry[0].birthDate).getTime() / 1000;
+        const collectedDateUnix = new Date(rawDocInfo.fhirBundle.entry[1].collection.collectedDateTime).getTime() / 1000;
+
         if (patientId == null) {
+          
           const patient = new this.studentModel({
-            patientId: "H00047",
+            patientId: rawDocInfo.patientId,
             patientNRIC: rawDocInfo.fhirBundle.entry[0].identifier[1].value,
-            
-            patientEmail: "eugenetan@hotmail.com",
+            patientEmail: rawDocInfo.patientEmail,
             patientName: rawDocInfo.fhirBundle.entry[0].name[0].text,
             gender: rawDocInfo.fhirBundle.entry[0].gender,
             patientPPN: rawDocInfo.fhirBundle.entry[0].identifier[0].value,
             nationally: rawDocInfo.fhirBundle.entry[0].extension[0].code.text,
-            //dob: rawDocInfo.fhirBundle.entry[0].birthDate,
-            //effectiveDate: rawDocInfo.fhirBundle.entry[2].effectiveDateTime,
+            dob: dobUnix,
+            effectiveDate: effectiveDateUnix,
           });
 
-          await patient.save();
+          await patient.save();  
 
         }
 
-        //const patientInfo = await this.studentModel.findOne({
-          //patientId: rawDocInfo.fhirBundle.entry[0].identifier[1].value,
-        //});
+        const patientInfo = await this.studentModel.findOne({
+          patientId: rawDocInfo.patientId,
+        });
 
         //Save Doc Info to DB
         const doc = new this.documentModel({
@@ -2162,12 +2194,12 @@ export class JedsignService {
           docInfo,
           wrapDocInfo,
           docType: 'HCPCR',
-          //documentId: rawDocInfo.id,
+          documentId: rawDocInfo.id,
           patientTKC: rawDocInfo.fhirBundle.entry[1].type.coding[0].code,
           patientTKN: rawDocInfo.fhirBundle.entry[1].type.coding[0].display,
-          //collectedDate: rawDocInfo.fhirBundle.entry[1].collection.collectedDateTime,
-          //effectiveDate: rawDocInfo.fhirBundle.entry[2].effectiveDateTime,
-          //patientId: patientInfo._id,
+          collectedDate: collectedDateUnix,
+          effectiveDate: effectiveDateUnix,
+          patientId: patientInfo._id,
           resultCode: rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].code,
           result: rawDocInfo.fhirBundle.entry[2].valueCodeableConcept.coding[0].display,
           performer: rawDocInfo.fhirBundle.entry[2].performer.name[0].text,
@@ -2248,16 +2280,6 @@ export class JedsignService {
     console.log('CreateDICT', duration);
     return { certArr };
   }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3385,9 +3407,15 @@ export class JedsignService {
   async getDocument(docHash: string) {
     const doc = await this.documentModel.findOne({ docHash }, { __v: 0, _id: 0 });
     const docInfo = JSON.parse(doc.docInfo);
-    const certTitle = docInfo.recipient.courseName;
 
-    const name = `${docInfo.recipient.name} ${docInfo.recipient.lastName}`;
+    console.log(docInfo);
+    const certTitle = docInfo.title;
+
+    console.log(certTitle);
+  
+    const name = `${docInfo.patientFirstName} ${docInfo.patientLastName}`;
+
+    console.log(name);
     const document = {
       docInfo,
       certTitle,
