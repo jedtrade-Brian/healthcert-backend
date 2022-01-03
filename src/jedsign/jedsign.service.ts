@@ -1275,14 +1275,15 @@ export class JedsignService {
     const backToArray = [...uniqueSet];
 
     const studentArr = [];
+
     await Promise.all(
-      backToArray.map(async student => {
+      backToArray.map(async patientId => {
         const studentInfo = await this.studentModel.findOne(
-          { _id: student },
+          { _id: patientId },
           { __v: 0, updated: 0, created: 0 },
         );
 
-        const documentArr = await this.documentModel.find({ patientId: student });
+        const documentArr = await this.documentModel.find({ patientId: patientId });
         const students = {
           noOfDocs: documentArr.length,
         };
@@ -1309,21 +1310,26 @@ export class JedsignService {
     );
     const docStore = await factoryContract.methods.assets(getUserAddr).call();
     const batchInfo = await this.batchesModel.findOne({ issuerDocStore: docStore, _id: batchId });
+
+    //console.log(batchInfo);
     const documentBatch = batchInfo.documentBatch;
     const studentArr = [];
 
     await Promise.all(
       documentBatch.map(async document => {
         const doc = await this.documentModel.findOne({ docHash: document });
+
         const docInfo = doc.docInfo;
         const jsonInfo = JSON.parse(docInfo);
-        const recipientInfo = jsonInfo.recipient;
-        const name = `${recipientInfo.name} ${recipientInfo.lastName}`;
+
+        console.log(jsonInfo);
+
+        const name = `${jsonInfo.fhirBundle.entry[0].name[0].text}`;
         const studentInfo = {
           docHash: document,
-          studentId: recipientInfo.studentId,
+          studentId: jsonInfo.patientId,
           name,
-          email: recipientInfo.email,
+          email: jsonInfo.patientEmail,
         };
         studentArr.push(studentInfo);
       }),
@@ -1334,7 +1340,7 @@ export class JedsignService {
     return { batchId, issuedBatch: batchInfo.createdAt, studentArr };
   }
 
-  async getStudentsDetail(apiToken: string, studentId: string) {
+  async getStudentsDetail(apiToken: string, patientId: string) {
     const startTime = new Date();
     const web3 = await this.web3Service.getWeb3();
 
@@ -1345,16 +1351,21 @@ export class JedsignService {
       process.env.DOCSTORE_FACTORY,
     );
     const docStore = await factoryContract.methods.assets(getUserAddr).call();
-    const studentCerts = await this.documentModel.find({ issuerDocStore: docStore, studentId });
+
+    const studentCerts = await this.documentModel.find({ issuerDocStore: docStore, patientId });
+
     const studentArr = [];
-    const students = await this.studentModel.findOne({ _id: studentId });
+    const students = await this.studentModel.findOne({ _id: patientId });
+
+    console.log(students);
+
     const studentInfo = {
-      name: students.name,
-      studentId: students.studentId,
-      email: students.email,
-      nric: students.nric,
+      name: students.patientName,
+      studentId: students.patientId,
+      email: students.patientEmail,
+      nric: students.patientNRIC,
       dob: students.dob,
-      graduationDate: students.graduationDate,
+      effectiveDate: students.effectiveDate,
     };
 
     // Get certs
@@ -1364,7 +1375,10 @@ export class JedsignService {
         const wrapCertInfo = JSON.parse(document.wrapDocInfo);
         const merkleRoot = wrapCertInfo.signature.merkleRoot;
         const rawCertInfo = JSON.parse(document.docInfo);
-        const courseName = rawCertInfo.recipient.courseName;
+
+        console.log(rawCertInfo);
+
+        const courseName = rawCertInfo.fhirBundle.entry[1].type.coding[0].display;
         const issuedBlock = await contract.methods.documentIssued(`0x${merkleRoot}`).call();
         console.log('issuedBlock', `0x${merkleRoot}`, issuedBlock);
         let issuedDate;

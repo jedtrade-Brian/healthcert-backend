@@ -296,13 +296,9 @@ export class EnterpriseViewController {
       },
     },
   })
-  
   async getCertList(@Request() req) {
-
     try {
-      
       return await this.jedsignService.getAllCertificate(req.user.token);
-     
     } catch (e) {
       throw new NotAcceptableException(e.message);
 
