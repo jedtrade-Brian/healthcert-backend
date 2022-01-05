@@ -1964,9 +1964,13 @@ export class JedsignService {
     // secret key generate 32 bytes of random data
     const Securitykey = crypto.randomBytes(32);
     const hexsecuritykey = Securitykey.toString('hex');
-    console.log(hexsecuritykey);
+
+    //console.log('\n',hexsecuritykey);
+
     // generate 16 bytes of random data
     const initVector = crypto.randomBytes(16);
+
+    console.log(initVector.toString('base64'));
 
     const issuers = {
       //name: 'HCPCR Certificate',
@@ -2000,19 +2004,13 @@ export class JedsignService {
         const notarisedOn = document['notarisedOn'];
         const passportNumber = document['passportNumber'];
 
-        //'{"type":"DOCUMENT","payload":{"uri":"https://idev.jupyton.com:8443/document/6cfbbcbf-85a1-4644-b61a-952c12376502.json","key":"2b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c"}}'
-
-        //https://dev.opencerts.io/?q=%7B%22type%22%3A%22DOCUMENT%22%2C%22payload%22%3A%7B%22uri%22%3A%22https%3A%2F%2Fidev.jupyton.com%3A8443%2Fdocument%2F6cfbbcbf-85a1-4644-b61a-952c12376502.json%22%2C%22key%22%3A%222b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c%22%7D%7D
+        //console.log(reference);
 
         const encodeduri = encodeURIComponent(
           `{"type":"DOCUMENT","payload":{"uri":"https://absolutesc.com.sg/document/${reference}-HCPCR.json","key":"${hexsecuritykey}"}}`,
         );
 
-        //https://rinkeby.opencerts.io/?q={"type":"DOCUMENT","payload":{"uri":"https://absolutesc.com.sg/document/ffb1e61f-30ec-419c-9e0c-baa844d876b1-HCPCR.json","key":"2b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c"}}
-
-        //https://rinkeby.opencerts.io/?q=%7B%22type%22%3A%22DOCUMENT%22%2C%22payload%22%3A%7B%22uri%22%3A%22https%3A%2F%2Fabsolutesc.com.sg%2Fdocument%2Fffb1e61f-30ec-419c-9e0c-baa844d876b1-HCPCR.json%22%2C%22key%22%3A%222b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c%22%7D%7D
-
-        console.log('\n\n', `https://rinkeby.opencerts.io/?q=${encodeduri}`);
+        console.log('\n', `https://rinkeby.opencerts.io/?q=${encodeduri}`);
 
         const qrcosde = {
           notarisationMetadata: {
@@ -2050,7 +2048,6 @@ export class JedsignService {
           const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
           const finalFile = `${folderPath}/${hcpcrJSON}`;
 
-          console.log(finalFile);
           fs.writeFileSync(finalFile, dictString);
           const bufferReadFile = fs.readFileSync(finalFile);
           const readFile = bufferReadFile.toString();
@@ -2061,7 +2058,11 @@ export class JedsignService {
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
 
+    console.log('\n', wrappedDocuments);
+
     const encrypttext = JSON.stringify(wrappedDocuments);
+
+    console.log('\n', encrypttext);
 
     // protected data
     const message = encrypttext;
@@ -2071,24 +2072,24 @@ export class JedsignService {
     // the cipher function
     const cipher = crypto.createCipheriv(algorithm, Securitykey, initVector);
 
-    // encrypt the message
-    // input encoding
-    // output encoding
     let encryptedData = cipher.update(message, 'utf-8', 'hex');
 
     encryptedData += cipher.final('hex');
-    const ivnumber = initVector.toString('hex');
+    const ivnumber = initVector.toString('base64');
+
     console.log('\n', ivnumber);
 
     const encryptedqrcode = `{"cipherText":"${encryptedData},"iv":${ivnumber},"tag":"MWf8rpjywm6teXh+HnjYTQ==","type":"OPEN-ATTESTATION-TYPE-1","ttl":1624170562596}`;
 
     console.log('\n', encryptedqrcode);
+
     const decipher = crypto.createDecipheriv(algorithm, Securitykey, initVector);
 
     console.log('\n', Securitykey.toString('hex'));
 
     let decryptedData = decipher.update(encryptedData, 'hex', 'utf-8');
     decryptedData += decipher.final('utf8');
+
     console.log('\n', 'Decrypted message: ' + decryptedData);
 
     let merkleRoot;
