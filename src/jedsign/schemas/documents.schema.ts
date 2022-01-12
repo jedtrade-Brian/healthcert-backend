@@ -1,20 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export const DocumentSchema = new mongoose.Schema({
-  studentId: {
-    type: String,
-  },
-  docType: {
-    type: String,
-    required: true,
-    indexed: true,
-  },
   docHash: {
-    type: String,
-    required: true,
-    indexed: true,
-  },
-  documentId: {
     type: String,
     required: true,
     indexed: true,
@@ -31,13 +18,62 @@ export const DocumentSchema = new mongoose.Schema({
   wrapDocInfo: {
     type: String,
   },
-  createdAt: {
+  docType: {
+    type: String,
+    required: true,
+    indexed: true,
+  },
+  documentId: {
+    type: Number,
+    required: true,
+    indexed: true,
+  },
+  patientId: {
+    type: String,
+  },
+  patientTKC: {
     type: Number,
   },
-  updatedAt: {
+  patientTKN: {
+    type: String,
+  },
+  collectedDate: {
     type: Number,
   },
-  completionDate: {
+  effectiveDate: {
+    type: Number,
+  },
+  resultcode: {
+    type: Number,
+  },
+  result: {
+    type: String,
+  },
+  performer: {
+    type: String,
+  },
+  identifier: {
+    type: String,
+  },
+  clinicName: {
+    type: String,
+  },
+  officeAdd: {
+    type: String,
+  },
+  officeNo: {
+    type: Number,
+  },
+  webAdd: {
+    type: String,
+  },
+  labName: {
+    type: String,
+  },
+  labAdd: {
+    type: String,
+  },
+  labNo: {
     type: Number,
   },
   issuedDate: {
@@ -48,6 +84,12 @@ export const DocumentSchema = new mongoose.Schema({
   },
   isBatchRevoke: {
     type: Boolean,
+  },
+  createdAt: {
+    type: Number,
+  },
+  updatedAt: {
+    type: Number,
   },
 });
 

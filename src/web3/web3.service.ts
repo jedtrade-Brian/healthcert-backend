@@ -76,7 +76,7 @@ export class Web3Service {
     // the named import at the begining of this file does not work properly
     // keeps return undefined for unknown reason
     // TODO: investigate this problem
-    netId = netId ? Number(netId) : 4;
+    netId = netId ? Number(netId) : 3;
 
     switch (netId) {
       case 1:

@@ -1,23 +1,32 @@
 import * as mongoose from 'mongoose';
 
 export const StudentSchema = new mongoose.Schema({
-  studentId: {
-    type: 'string'
+  patientId: {
+    type: 'string',
   },
-  nric: {
-    type: 'string'
+  patientNRIC: {
+    type: 'string',
   },
-  name: {
-    type: 'string'
+  patientEmail: {
+    type: 'string',
   },
-  email: {
-    type: 'string'
+  patientName: {
+    type: 'string',
+  },
+  gender: {
+    type: 'string',
+  },
+  patientPPN: {
+    type: 'string',
+  },
+  nationally: {
+    type: 'string',
   },
   dob: {
-    type: 'number'
+    type: 'number',
   },
-  graduationDate: {
-    type: 'number'
+  effectiveDate: {
+    type: 'number',
   },
   created: {
     type: Number,

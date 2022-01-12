@@ -37,6 +37,17 @@ import { cpus } from 'os';
 import { WrapperWorker } from '../jedsign/wrapdocs/WrapperWorker';
 import { waitFor, waitForAll } from 'wait-for-event';
 
+import {
+  encryptString,
+  decryptString,
+  ENCRYPTION_PARAMETERS,
+  IEncryptionResults,
+  encodeDocument,
+  decodeDocument,
+} from '../encryption';
+
+//import issued_cert from "C:/Users/Eugen/Desktop/YQ/jedtrade-pdt-healthcert-issued.json";
+
 const log4js = require('log4js');
 log4js.configure({
   appenders: { cheese: { type: 'file', filename: 'cheese.log' } },
@@ -471,6 +482,8 @@ export class JedsignService {
     );
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
+
+    console.log(wrappedDocuments);
 
     let merkleRoot;
     const targetArr = [];
@@ -1943,6 +1956,8 @@ export class JedsignService {
   }
 
   async createhcpcrDoc(apiToken: string, HCPCRDTO: HCPCRDTO) {
+    console.log(HCPCRDTO);
+
     const certArr = [];
     const rawJSONArr = [];
     const startTime = new Date();
@@ -1958,19 +1973,6 @@ export class JedsignService {
     );
 
     const docStore = await factoryContract.methods.assets(getUserAddr).call();
-
-    // crypto module
-    const crypto = require('crypto');
-    // secret key generate 32 bytes of random data
-    const Securitykey = crypto.randomBytes(32);
-    const hexsecuritykey = Securitykey.toString('hex');
-
-    //console.log('\n',hexsecuritykey);
-
-    // generate 16 bytes of random data
-    const initVector = crypto.randomBytes(16);
-
-    console.log(initVector.toString('base64'));
 
     const issuers = {
       //name: 'HCPCR Certificate',
@@ -1996,6 +1998,10 @@ export class JedsignService {
     const valuesAlreadySeen = [];
     await this.web3Service.updateGasPrice();
 
+    const key = '2b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c';
+    //const fileref = "6cfbbcbf-85a1-4644-b61a-952c12376502";
+    const ttl = '1624170562596';
+
     await Promise.all(
       HCPCRDTO.documents.map(async document => {
         const documentId = document['transcriptId'];
@@ -2007,17 +2013,19 @@ export class JedsignService {
         //console.log(reference);
 
         const encodeduri = encodeURIComponent(
-          `{"type":"DOCUMENT","payload":{"uri":"https://absolutesc.com.sg/document/${reference}-HCPCR.json","key":"${hexsecuritykey}"}}`,
+          `{"type":"DOCUMENT","payload":{"uri":"https://absolutesc.com.sg/document/ffb1e61f-30ec-419c-9e0c-baa844d876b1-HCPCR.json","key":"${key}"}}`,
         );
 
-        console.log('\n', `https://rinkeby.opencerts.io/?q=${encodeduri}`);
+        console.log(encodeduri);
+
+        console.log(`https://dev.opencerts.io/?q=${encodeduri}`);
 
         const qrcosde = {
           notarisationMetadata: {
             reference: reference,
             notarisedOn: notarisedOn,
             passportNumber: passportNumber,
-            url: `https://rinkeby.opencerts.io/?q=${encodeduri}`,
+            url: `https://dev.opencerts.io/?q=${encodeduri}`,
           },
           logo:
             'data:image/png;base64,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',
@@ -2058,39 +2066,7 @@ export class JedsignService {
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
 
-    console.log('\n', wrappedDocuments);
-
-    const encrypttext = JSON.stringify(wrappedDocuments);
-
-    console.log('\n', encrypttext);
-
-    // protected data
-    const message = encrypttext;
-
-    const algorithm = 'aes-256-cbc';
-
-    // the cipher function
-    const cipher = crypto.createCipheriv(algorithm, Securitykey, initVector);
-
-    let encryptedData = cipher.update(message, 'utf-8', 'hex');
-
-    encryptedData += cipher.final('hex');
-    const ivnumber = initVector.toString('base64');
-
-    console.log('\n', ivnumber);
-
-    const encryptedqrcode = `{"cipherText":"${encryptedData},"iv":${ivnumber},"tag":"MWf8rpjywm6teXh+HnjYTQ==","type":"OPEN-ATTESTATION-TYPE-1","ttl":1624170562596}`;
-
-    console.log('\n', encryptedqrcode);
-
-    const decipher = crypto.createDecipheriv(algorithm, Securitykey, initVector);
-
-    console.log('\n', Securitykey.toString('hex'));
-
-    let decryptedData = decipher.update(encryptedData, 'hex', 'utf-8');
-    decryptedData += decipher.final('utf8');
-
-    console.log('\n', 'Decrypted message: ' + decryptedData);
+    console.log(wrappedDocuments);
 
     let merkleRoot;
     const targetArr = [];
@@ -2105,8 +2081,54 @@ export class JedsignService {
         const finalFile = `${folderPath}/${hcpcrJSON}`;
         fs.writeFileSync(finalFile, wrapDocInfo);
 
-        const encryptFile = `C:/wamp64/www/document/${hcpcrJSON}`;
-        fs.writeFileSync(encryptFile, encryptedqrcode);
+        console.debug('=============== *** ===============');
+        const issuedDoc = JSON.stringify(wrappedDocuments);
+
+        const encDoc = encryptString(issuedDoc, key);
+        const decDoc = decryptString(encDoc);
+
+        console.debug(encDoc);
+        console.debug('===============');
+        console.debug(decDoc);
+
+        const ouFileName = 'C:/wamp64/www/document/' + hcpcrJSON;
+
+        console.debug('===============');
+
+        console.log(ouFileName);
+
+        const outputStr =
+          '{' +
+          '"cipherText":"' +
+          encDoc.cipherText +
+          '",' +
+          '"iv":"' +
+          encDoc.iv +
+          '",' +
+          '"tag":"' +
+          encDoc.tag +
+          '",' +
+          '"type":"' +
+          encDoc.type +
+          '",' +
+          '"ttl":' +
+          ttl +
+          '}';
+
+        console.debug('===============');
+
+        console.log(outputStr);
+
+        fs.writeFile(ouFileName, outputStr, function(err) {
+          if (err) {
+            return console.error(err);
+          }
+
+          console.log('Encrypted Doc written to [' + ouFileName + '] successfully!');
+        });
+
+        //const encryptFile = `C:/wamp64/www/document/${hcpcrJSON}`;
+        //fs.writeFileSync(encryptFile, encryptedqrcode);
 
         const file = Buffer.from(fs.readFileSync(finalFile).toString('base64'));
         const docRoot = wrappedDoc['signature'].targetHash;
@@ -2120,7 +2142,7 @@ export class JedsignService {
           patientId: rawDocInfo.patientId,
         });
 
-        //console.log(patientId);
+        console.log(rawDocInfo.fhirBundle.entry[0].birthDate);
         const dobUnix = new Date(rawDocInfo.fhirBundle.entry[0].birthDate).getTime() / 1000;
         const effectiveDateUnix =
           new Date(rawDocInfo.fhirBundle.entry[0].birthDate).getTime() / 1000;
@@ -2142,7 +2164,7 @@ export class JedsignService {
 
           await patient.save();
 
-          //console.log(1);
+          console.log(1);
         }
 
         const patientInfo = await this.studentModel.findOne({
@@ -2177,6 +2199,8 @@ export class JedsignService {
           revokedDate: 0,
           isBatchRevoke: false,
         });
+
+        //console.log(patientInfo._id);
 
         await doc.save();
 
@@ -2239,7 +2263,7 @@ export class JedsignService {
 
     const endTime = new Date();
     const duration = (endTime.getTime() - startTime.getTime()) / 1000;
-    console.log('CreateDICT', duration);
+    console.log('CreateHCPCR', duration);
     return { certArr };
   }
 
@@ -5176,7 +5200,7 @@ export class JedsignService {
   //   workers.forEach(w => wrappedDocuments.push(...w.output));
   //   return wrappedDocuments;
   // }
-  private async wrapDocuments(rawJSONArr: any, workerCount: number) {
+  async wrapDocuments(rawJSONArr: any, workerCount: number) {
     const minSize = rawJSONArr.length / workerCount;
     const workers: Array<WrapperWorker> = [];
 
@@ -5212,6 +5236,8 @@ export class JedsignService {
         .map((buffer: Buffer) => buffer.toString('hex'));
       return {
         ...document,
+        schema:
+          'https://schemata.openattestation.com/sg/gov/tech/notarise/1.0/notarise-open-attestation-schema.json',
         signature: {
           ...document.signature,
           proof: merkleProof,
