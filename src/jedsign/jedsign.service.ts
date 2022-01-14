@@ -37,16 +37,7 @@ import { cpus } from 'os';
 import { WrapperWorker } from '../jedsign/wrapdocs/WrapperWorker';
 import { waitFor, waitForAll } from 'wait-for-event';
 
-import {
-  encryptString,
-  decryptString,
-  ENCRYPTION_PARAMETERS,
-  IEncryptionResults,
-  encodeDocument,
-  decodeDocument,
-} from '../encryption';
-
-//import issued_cert from "C:/Users/Eugen/Desktop/YQ/jedtrade-pdt-healthcert-issued.json";
+const { encryptString, decryptString } = require('@govtechsg/oa-encryption');
 
 const log4js = require('log4js');
 log4js.configure({
@@ -1956,8 +1947,6 @@ export class JedsignService {
   }
 
   async createhcpcrDoc(apiToken: string, HCPCRDTO: HCPCRDTO) {
-    console.log(HCPCRDTO);
-
     const certArr = [];
     const rawJSONArr = [];
     const startTime = new Date();
@@ -1975,7 +1964,6 @@ export class JedsignService {
     const docStore = await factoryContract.methods.assets(getUserAddr).call();
 
     const issuers = {
-      //name: 'HCPCR Certificate',
       issuers: [
         {
           name: `${getCompanyName}`,
@@ -1999,24 +1987,18 @@ export class JedsignService {
     await this.web3Service.updateGasPrice();
 
     const key = '2b1236683c3a842ed4a0bb032c1cf668e24bcaf8ce599aeef502c93cb628152c';
-    //const fileref = "6cfbbcbf-85a1-4644-b61a-952c12376502";
     const ttl = '1624170562596';
 
     await Promise.all(
       HCPCRDTO.documents.map(async document => {
         const documentId = document['transcriptId'];
-        //const patientId = document['patientId'];
         const reference = document['reference'];
         const notarisedOn = document['notarisedOn'];
         const passportNumber = document['passportNumber'];
 
-        //console.log(reference);
-
         const encodeduri = encodeURIComponent(
-          `{"type":"DOCUMENT","payload":{"uri":"https://absolutesc.com.sg/document/ffb1e61f-30ec-419c-9e0c-baa844d876b1-HCPCR.json","key":"${key}"}}`,
+          `{"type":"DOCUMENT","payload":{"uri":"https://jedtrade-eugene.github.io/${reference}-HCPCR.json","key":"${key}"}}`,
         );
-
-        console.log(encodeduri);
 
         console.log(`https://dev.opencerts.io/?q=${encodeduri}`);
 
@@ -2053,9 +2035,10 @@ export class JedsignService {
 
           const hcpcrJSON = `${documentId}-HCPCR.json`;
           const dictString = JSON.stringify(hcpcrDoc);
-          const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
-          const finalFile = `${folderPath}/${hcpcrJSON}`;
+          //const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
+          //const finalFile = `${folderPath}/${hcpcrJSON}`;
 
+          const finalFile = `C:/Users/Eugen/Desktop/healthcert-raw-document/${hcpcrJSON}`;
           fs.writeFileSync(finalFile, dictString);
           const bufferReadFile = fs.readFileSync(finalFile);
           const readFile = bufferReadFile.toString();
@@ -2066,36 +2049,28 @@ export class JedsignService {
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
 
-    console.log(wrappedDocuments);
-
     let merkleRoot;
     const targetArr = [];
     await Promise.all(
       wrappedDocuments.map(async wrappedDoc => {
         const wrapDocInfo = JSON.stringify(wrappedDoc);
         const rawDocInfo = getData(wrappedDoc);
-
         const docInfo = JSON.stringify(rawDocInfo);
-        const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
+        //const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
         const hcpcrJSON = `${rawDocInfo.id}-HCPCR.json`;
-        const finalFile = `${folderPath}/${hcpcrJSON}`;
+        //const finalFile = `${folderPath}/${hcpcrJSON}`;
+
+        const finalFile = `C:/Users/Eugen/Desktop/healthcert-wrap-document/${hcpcrJSON}`;
+
         fs.writeFileSync(finalFile, wrapDocInfo);
 
-        console.debug('=============== *** ===============');
-        const issuedDoc = JSON.stringify(wrappedDocuments);
+        const encDoc = encryptString(wrapDocInfo, key);
+        //console.debug(encDoc);
 
-        const encDoc = encryptString(issuedDoc, key);
         const decDoc = decryptString(encDoc);
-
-        console.debug(encDoc);
-        console.debug('===============');
-        console.debug(decDoc);
+        //console.debug(decDoc);
 
         const ouFileName = 'C:/wamp64/www/document/' + hcpcrJSON;
-
-        console.debug('===============');
-
-        console.log(ouFileName);
 
         const outputStr =
           '{' +
@@ -2115,20 +2090,14 @@ export class JedsignService {
           ttl +
           '}';
 
-        console.debug('===============');
-
         console.log(outputStr);
 
         fs.writeFile(ouFileName, outputStr, function(err) {
           if (err) {
             return console.error(err);
           }
-
           console.log('Encrypted Doc written to [' + ouFileName + '] successfully!');
         });
-
-        //const encryptFile = `C:/wamp64/www/document/${hcpcrJSON}`;
-        //fs.writeFileSync(encryptFile, encryptedqrcode);
 
         const file = Buffer.from(fs.readFileSync(finalFile).toString('base64'));
         const docRoot = wrappedDoc['signature'].targetHash;
@@ -2142,7 +2111,6 @@ export class JedsignService {
           patientId: rawDocInfo.patientId,
         });
 
-        console.log(rawDocInfo.fhirBundle.entry[0].birthDate);
         const dobUnix = new Date(rawDocInfo.fhirBundle.entry[0].birthDate).getTime() / 1000;
         const effectiveDateUnix =
           new Date(rawDocInfo.fhirBundle.entry[0].birthDate).getTime() / 1000;
@@ -2163,8 +2131,6 @@ export class JedsignService {
           });
 
           await patient.save();
-
-          console.log(1);
         }
 
         const patientInfo = await this.studentModel.findOne({
@@ -2199,8 +2165,6 @@ export class JedsignService {
           revokedDate: 0,
           isBatchRevoke: false,
         });
-
-        //console.log(patientInfo._id);
 
         await doc.save();
 
