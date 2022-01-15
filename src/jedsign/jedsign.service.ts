@@ -22,7 +22,7 @@ const { verify, isValid } = require('@govtechsg/oa-verify');
 import * as util from 'util';
 import { PGDSLIDto } from './dto/pgdsli.dto';
 import { NoaDto } from './dto/noa.dto';
-import { adcs, adsm, dict, pddmcs, pgdsli } from './templates/';
+import { adcs, adsm, dict, pddmcs, pgdsli, hcpcr } from './templates/';
 const EthereumTx = require('ethereumjs-tx').Transaction;
 import pdf = require('html-pdf');
 import PDFDocument = require('pdfkit');
@@ -1445,7 +1445,10 @@ export class JedsignService {
         document = pddmcs(name, lastName, month, year);
       } else if (docType == 'PGDSLI') {
         document = pgdsli(name, lastName, month, year);
+      } else if (docType == 'HCPCR') {
+        document = hcpcr(name, lastName, month, year);
       }
+
       return document;
     } catch (err) {
       return Promise.reject('Could not load html');
@@ -1457,15 +1460,17 @@ export class JedsignService {
     const docType = getDocInfo.docType;
     const docInfo = JSON.parse(getDocInfo.docInfo);
     const id = docInfo.id;
-    const firstName = docInfo.recipient.name;
-    const lastName = docInfo.recipient.lastName;
-    const completionDate = docInfo.recipient.completionDate;
+    const firstName = docInfo.patientFirstName;
+    const lastName = docInfo.patientLastName;
+    const completionDate = docInfo.effectiveDate;
     const date = new Date(completionDate * 1000);
     const month = date.toLocaleString('default', { month: 'long' });
     const year = date.getFullYear();
-    const email = docInfo.recipient.email;
+    const email = docInfo.patientEmail;
+    console.log(email);
     const name = `${firstName} ${lastName}`;
     const data = {};
+    console.log('1');
     this.getTemplateHtml(docType, firstName, lastName, month, year)
       .then(async res => {
         const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'foo-'));
@@ -1474,14 +1479,18 @@ export class JedsignService {
         const template = hb.compile(res, { strict: true });
         const result = template(data);
 
-        const options = {
-          height: '15.5in',
-          width: '14.3in',
-          orientation: 'portrait',
-          phantomPath: '/usr/local/bin/phantomjs',
-        };
-        pdf.create(result, options).toFile(finalFile, function(err, data) {
+        console.log(result);
+        console.log('2');
+        // const options = {
+        //   height: '15.5in',
+        //   width: '14.3in',
+        //   orientation: 'portrait',
+        //   phantomPath: '/usr/local/bin/phantomjs',
+        // };
+
+        pdf.create(result).toFile(finalFile, function(err, data) {
           if (err) {
+            console.log('3');
             console.log(err);
           } else {
             console.log(data);
@@ -2146,6 +2155,9 @@ export class JedsignService {
           docType: 'HCPCR',
           documentId: rawDocInfo.transcriptId,
           patientId: patientInfo._id,
+          patientFirstName: rawDocInfo.patientFirstName,
+          patientLastName: rawDocInfo.patientLastName,
+          patientEmail: rawDocInfo.patientEmail,
           patientTKC: rawDocInfo.fhirBundle.entry[1].type.coding[0].code,
           patientTKN: rawDocInfo.fhirBundle.entry[1].type.coding[0].display,
           collectedDate: collectedDateUnix,

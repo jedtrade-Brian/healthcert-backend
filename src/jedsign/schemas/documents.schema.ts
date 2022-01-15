@@ -31,6 +31,15 @@ export const DocumentSchema = new mongoose.Schema({
   patientId: {
     type: String,
   },
+  patientFirstName: {
+    type: String,
+  },
+  patientLastName: {
+    type: String,
+  },
+  patientEmail: {
+    type: String,
+  },
   patientTKC: {
     type: Number,
   },
