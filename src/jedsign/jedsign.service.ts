@@ -474,8 +474,6 @@ export class JedsignService {
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
 
-    console.log(wrappedDocuments);
-
     let merkleRoot;
     const targetArr = [];
     await Promise.all(
@@ -813,6 +811,9 @@ export class JedsignService {
           const stringCertInfo = document.docInfo;
           logger.info('Jedsign.service: getAllCertificate: stringCertInfo: ', stringCertInfo);
           const certInfo = JSON.parse(stringCertInfo);
+
+          //console.log(certInfo);
+
           let docInfo;
           let approvers2;
 
@@ -823,15 +824,18 @@ export class JedsignService {
 
             docInfo = {
               docHash: document.docHash,
+              issuerDocStore: document.issuerDocStore,
               docType: document.docType,
               transcriptId: certInfo.transcriptId,
               patientId: certInfo.patientId,
               name: certInfo.fhirBundle.entry[0].name[0].text,
               testName: certInfo.fhirBundle.entry[1].type.coding[0].display,
               effectiveDate: certInfo.fhirBundle.entry[2].effectiveDateTime,
+              reference: certInfo.reference,
               issuedOn: document.issuedDate,
               revoked: document.revokedDate, // revokedDate,
               wrapDocInfo: document.wrapDocInfo,
+              merkleroot: document.merkleRoot,
               approvers: approvers2,
               // isissuedDate: isissuedDate,
               // isRevokedDate: isRevokedDate,
@@ -842,15 +846,19 @@ export class JedsignService {
           } else {
             const docInfo = {
               docHash: document.docHash,
+              issuerDocStore: document.issuerDocStore,
               docType: document.docType,
               transcriptId: certInfo.transcriptId,
               patientId: certInfo.patientId,
               name: certInfo.fhirBundle.entry[0].name[0].text,
               testName: certInfo.fhirBundle.entry[1].type.coding[0].display,
               effectiveDate: certInfo.fhirBundle.entry[2].effectiveDateTime,
+              reference: certInfo.reference,
               issuedOn: document.issuedDate,
               revoked: document.revokedDate,
               wrapDocInfo: document.wrapDocInfo,
+              merkleroot: document.merkleRoot,
+
               // isissuedDate: isissuedDate,
               // isRevokedDate: isRevokedDate,
               // documentId: document.documentId,
@@ -2079,7 +2087,7 @@ export class JedsignService {
         const decDoc = decryptString(encDoc);
         //console.debug(decDoc);
 
-        const ouFileName = 'C:/wamp64/www/document/' + hcpcrJSON;
+        const ouFileName = 'C:/Users/Eugen/Desktop/jedtrade-Eugene.github.io/' + hcpcrJSON;
 
         const outputStr =
           '{' +
@@ -2152,6 +2160,7 @@ export class JedsignService {
           issuerDocStore: docStore,
           docInfo,
           wrapDocInfo,
+          merkleRoot: wrappedDoc.signature.merkleRoot,
           docType: 'HCPCR',
           documentId: rawDocInfo.transcriptId,
           patientId: patientInfo._id,

@@ -18,6 +18,9 @@ export const DocumentSchema = new mongoose.Schema({
   wrapDocInfo: {
     type: String,
   },
+  merkleRoot: {
+    type: String,
+  },
   docType: {
     type: String,
     required: true,
