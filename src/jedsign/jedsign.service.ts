@@ -836,7 +836,7 @@ export class JedsignService {
               revoked: document.revokedDate, // revokedDate,
               wrapDocInfo: document.wrapDocInfo,
               merkleroot: document.merkleRoot,
-              approvers: approvers2,
+
               // isissuedDate: isissuedDate,
               // isRevokedDate: isRevokedDate,
               // documentId: document.documentId,
@@ -867,7 +867,7 @@ export class JedsignService {
             certificateInfo.push(docInfo);
           }
 
-          //console.log(certificateInfo);
+          console.log('line 914', certificateInfo);
         }),
       );
 
@@ -1334,7 +1334,7 @@ export class JedsignService {
         const docInfo = doc.docInfo;
         const jsonInfo = JSON.parse(docInfo);
 
-        console.log(jsonInfo);
+        //console.log(jsonInfo);
 
         const name = `${jsonInfo.fhirBundle.entry[0].name[0].text}`;
         const studentInfo = {
@@ -1369,7 +1369,7 @@ export class JedsignService {
     const studentArr = [];
     const students = await this.studentModel.findOne({ _id: patientId });
 
-    console.log(students);
+    //console.log(students);
 
     const studentInfo = {
       name: students.patientName,
@@ -1388,7 +1388,7 @@ export class JedsignService {
         const merkleRoot = wrapCertInfo.signature.merkleRoot;
         const rawCertInfo = JSON.parse(document.docInfo);
 
-        console.log(rawCertInfo);
+        //console.log(rawCertInfo);
 
         const courseName = rawCertInfo.fhirBundle.entry[1].type.coding[0].display;
         const issuedBlock = await contract.methods.documentIssued(`0x${merkleRoot}`).call();
@@ -2065,6 +2065,8 @@ export class JedsignService {
     );
 
     const wrappedDocuments = wrapDocuments(rawJSONArr);
+
+    console.log(wrappedDocuments);
 
     let merkleRoot;
     const targetArr = [];
@@ -3367,14 +3369,14 @@ export class JedsignService {
     const doc = await this.documentModel.findOne({ docHash }, { __v: 0, _id: 0 });
     const docInfo = JSON.parse(doc.docInfo);
 
-    console.log(docInfo);
+    //console.log(docInfo);
     const certTitle = docInfo.title;
 
-    console.log(certTitle);
+    //console.log(certTitle);
 
     const name = `${docInfo.patientFirstName} ${docInfo.patientLastName}`;
 
-    console.log(name);
+    //console.log(name);
     const document = {
       docInfo,
       certTitle,
@@ -5016,6 +5018,7 @@ export class JedsignService {
   }
 
   async revokeTvCertificates(apiToken: string, docHash: string, isBatch: string) {
+    console.log('1', apiToken, '2', docHash, '3', isBatch);
     let loginUserEmail;
     try {
       logger.info(`Jedsign.service: revokeTvCertificates: Started: docHash: ${docHash}`);
@@ -5086,10 +5089,12 @@ export class JedsignService {
       //Update DocumentDB
       logger.info(`Jedsign.service: revokeTvCertificates: docHash: ${docHash}`);
       logger.info(`Jedsign.service: revokeTvCertificates: isBatch: ${isBatch}`);
+      console.log(isBatch);
       //logger.info(`Jedsign.service: revokeTvCertificates: isBatch === true: ${isBatch === true}`);
       logger.info(`Jedsign.service: revokeTvCertificates: isBatch === true: ${isBatch === '1'}`);
 
       if (isBatch === '1') {
+        console.log('haha');
         //get All certs by merkle root
         const getCerts = await this.documentModel.find({ issuerDocStore: docStore });
         logger.info(`Jedsign.service: revokeTvCertificates: getCerts:`, getCerts);

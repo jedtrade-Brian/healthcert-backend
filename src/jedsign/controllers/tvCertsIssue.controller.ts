@@ -222,36 +222,6 @@ export class EnterpriseSignController {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   @UseGuards(AuthGuard('api'))
   @Post('/dict')
   @ApiBearerAuth()
@@ -313,21 +283,6 @@ export class EnterpriseSignController {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   @UseGuards(AuthGuard('api'))
   @Post('/hcpcr')
   @ApiBearerAuth()
@@ -367,15 +322,13 @@ export class EnterpriseSignController {
               effectiveDate: {
                 type: 'number',
                 description: 'Completion Date of course',
-              },  
-             
+              },
             },
           },
         },
       },
     },
   })
-  
   @ApiBadRequestResponse({
     description: 'Bad Request: probable cause: Invalid Input.',
   })
@@ -390,43 +343,6 @@ export class EnterpriseSignController {
       throw new BadRequestException(e.message);
     }
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
 
   @UseGuards(AuthGuard('api'))
   @Post('/adsm')
@@ -550,7 +466,6 @@ export class EnterpriseSignController {
       throw new BadRequestException(e.message);
     }
   }
-
 
   @UseGuards(AuthGuard('api'))
   @Post('/pddmcs')
@@ -692,9 +607,6 @@ export class EnterpriseSignController {
     }
   }
 
-  
-
-  
   @UseGuards(AuthGuard('api'))
   @Post('/:password')
   @ApiParam({ name: 'password' })
@@ -863,6 +775,7 @@ export class EnterpriseSignController {
     },
   })
   async revokeDocument(@Request() req, @Param() { docHash, isBatch }) {
+    console.log(docHash), console.log(isBatch);
     try {
       logger.info(`tvCertsIssue Controller: revokeDocument: : docHash: ${docHash}`);
       logger.info(`tvCertsIssue Controller: revokeDocument: : isBatch: ${isBatch}`);
