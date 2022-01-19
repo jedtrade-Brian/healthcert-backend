@@ -736,6 +736,7 @@ export class JedsignService {
             docType: document.docType,
             wrapDocInfo: document.wrapDocInfo,
           });
+
           //Update Database
           let filter, updateDocument;
           if (revokedDate > 0) {
@@ -812,7 +813,9 @@ export class JedsignService {
           logger.info('Jedsign.service: getAllCertificate: stringCertInfo: ', stringCertInfo);
           const certInfo = JSON.parse(stringCertInfo);
 
-          //console.log(certInfo);
+          //console.log('line 815 jedservice',document.issuerDocStore)
+
+          //console.log('line 815 jedservice',certInfo);
 
           let docInfo;
           let approvers2;
@@ -843,6 +846,8 @@ export class JedsignService {
             };
 
             certificateInfo.push(docInfo);
+
+            //console.log('if jedsignservice', certificateInfo);
           } else {
             const docInfo = {
               docHash: document.docHash,
@@ -867,7 +872,7 @@ export class JedsignService {
             certificateInfo.push(docInfo);
           }
 
-          console.log('line 914 jedsignservice', certificateInfo);
+          //console.log('else jedsignservice', certificateInfo);
         }),
       );
 
@@ -877,6 +882,7 @@ export class JedsignService {
       console.log('getAllCert', duration);
 
       return { certList: certificateInfo };
+
       return;
       // const certLogArr = [];
       // await Promise.all(
@@ -5094,7 +5100,6 @@ export class JedsignService {
       logger.info(`Jedsign.service: revokeTvCertificates: isBatch === true: ${isBatch === '1'}`);
 
       if (isBatch === '1') {
-        console.log('haha');
         //get All certs by merkle root
         const getCerts = await this.documentModel.find({ issuerDocStore: docStore });
         logger.info(`Jedsign.service: revokeTvCertificates: getCerts:`, getCerts);
@@ -5190,6 +5195,7 @@ export class JedsignService {
   //   workers.forEach(w => wrappedDocuments.push(...w.output));
   //   return wrappedDocuments;
   // }
+
   async wrapDocuments(rawJSONArr: any, workerCount: number) {
     const minSize = rawJSONArr.length / workerCount;
     const workers: Array<WrapperWorker> = [];

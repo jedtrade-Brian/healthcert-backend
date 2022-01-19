@@ -775,7 +775,7 @@ export class EnterpriseSignController {
     },
   })
   async revokeDocument(@Request() req, @Param() { docHash, isBatch }) {
-    console.log(docHash), console.log(isBatch);
+    console.log('line 778 jedservice', docHash), console.log('line 779 jedservice', isBatch);
     try {
       logger.info(`tvCertsIssue Controller: revokeDocument: : docHash: ${docHash}`);
       logger.info(`tvCertsIssue Controller: revokeDocument: : isBatch: ${isBatch}`);
