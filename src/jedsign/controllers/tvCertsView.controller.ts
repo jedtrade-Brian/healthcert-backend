@@ -230,6 +230,14 @@ export class EnterpriseViewController {
                 type: 'string',
                 description: 'Document Type',
               },
+              issuerDocStore: {
+                type: 'string',
+                description: 'Document docstore',
+              },
+              merkleRoot: {
+                type: 'string',
+                description: 'Document merkleRoot',
+              },
               studentId: {
                 type: 'string',
                 description: 'Student ID',

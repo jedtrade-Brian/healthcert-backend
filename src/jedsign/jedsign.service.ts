@@ -836,7 +836,7 @@ export class JedsignService {
               revoked: document.revokedDate, // revokedDate,
               wrapDocInfo: document.wrapDocInfo,
               merkleroot: document.merkleRoot,
-
+              approvers: approvers2,
               // isissuedDate: isissuedDate,
               // isRevokedDate: isRevokedDate,
               // documentId: document.documentId,
@@ -867,7 +867,7 @@ export class JedsignService {
             certificateInfo.push(docInfo);
           }
 
-          console.log('line 914', certificateInfo);
+          console.log('line 914 jedsignservice', certificateInfo);
         }),
       );
 
@@ -5078,9 +5078,9 @@ export class JedsignService {
         category: 'Jcert-API',
         description: `jedsign.service: revokeTvCertificates:   ${getUserInfo.email} : After calling root_created`,
       });
-      // await web3.eth
-      //   .sendSignedTransaction('0x' + serializedTx.toString('hex'))
-      //   .on('receipt', console.log);
+      await web3.eth
+        .sendSignedTransaction('0x' + serializedTx.toString('hex'))
+        .on('receipt', console.log);
 
       // check if it is revoked
       //const isRevoked = await contract.methods.isRevoked(docHash).call();
