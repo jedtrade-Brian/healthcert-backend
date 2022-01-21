@@ -1425,6 +1425,9 @@ export class JedsignService {
         const documentInfo = {
           docHash: document.docHash,
           docType: document.docType,
+          issuerDocStore: document.issuerDocStore,
+          merkleroot: document.merkleRoot,
+          reference: rawCertInfo.reference,
           courseName,
           transcriptId: document.documentId,
           issuedDate,
