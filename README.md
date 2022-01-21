@@ -3,12 +3,12 @@
 
 ### Pre-requisite
 MongoDBCompass 
-(https://www.mongodb.com/try/download/compass?tck=docs_compass&_ga=2.181768612.24741299.1642734553-42212813.1637736123)
- https://www.youtube.com/watch?v=IC_ik7wE6eM
+![Mongo installation](https://www.mongodb.com/try/download/compass?tck=docs_compass&_ga=2.181768612.24741299.1642734553-42212813.1637736123)
+![Video Guide](https://www.youtube.com/watch?v=IC_ik7wE6eM)
                 
 RabbitMQ       
-(https://www.rabbitmq.com/)
-https://www.youtube.com/watch?v=V9DWKbalbWQ&t=162s
+![RabbitMQ installation](https://www.rabbitmq.com/)
+![Video Guide](https://www.youtube.com/watch?v=V9DWKbalbWQ&t=162s)
                 
 ### dotenv
 
