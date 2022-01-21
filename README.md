@@ -1,14 +1,14 @@
 # JEDSign API
-(https://github.com/JupiterChain/jedsign-api/workflows/Deploy%20to%20Amazon%20EKS/badge.svg?branch=master)
+![Deploy to Amazon EKS](https://github.com/JupiterChain/jedsign-api/workflows/Deploy%20to%20Amazon%20EKS/badge.svg?branch=master)
 
 ### Pre-requisite
 MongoDBCompass 
-![Mongo installation](https://www.mongodb.com/try/download/compass?tck=docs_compass&_ga=2.181768612.24741299.1642734553-42212813.1637736123)
-![Video Guide](https://www.youtube.com/watch?v=IC_ik7wE6eM)
+[Mongo installation](https://www.mongodb.com/try/download/compass?tck=docs_compass&_ga=2.181768612.24741299.1642734553-42212813.1637736123)
+[Video Guide](https://www.youtube.com/watch?v=IC_ik7wE6eM)
                 
 RabbitMQ       
-![RabbitMQ installation](https://www.rabbitmq.com/)
-![Video Guide](https://www.youtube.com/watch?v=V9DWKbalbWQ&t=162s)
+[RabbitMQ installation](https://www.rabbitmq.com/)
+[Video Guide](https://www.youtube.com/watch?v=V9DWKbalbWQ&t=162s)
                 
 ### dotenv
 
