@@ -1,5 +1,5 @@
 # JEDSign API
-![Deploy to Amazon EKS](https://github.com/JupiterChain/jedsign-api/workflows/Deploy%20to%20Amazon%20EKS/badge.svg?branch=master)
+(https://github.com/JupiterChain/jedsign-api/workflows/Deploy%20to%20Amazon%20EKS/badge.svg?branch=master)
 
 ### Pre-requisite
 MongoDBCompass 
