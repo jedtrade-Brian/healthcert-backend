@@ -1,6 +1,3 @@
-# JEDSign API
-![Deploy to Amazon EKS](https://github.com/JupiterChain/jedsign-api/workflows/Deploy%20to%20Amazon%20EKS/badge.svg?branch=master)
-
 ### Pre-requisite
 MongoDBCompass 
 Installation: [MongoDB installation](https://www.mongodb.com/try/download/compass?tck=docs_compass&_ga=2.181768612.24741299.1642734553-42212813.1637736123)</br>
